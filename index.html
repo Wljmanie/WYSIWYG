@@ -17,8 +17,8 @@
     <body>
         <div id="wysiwyg" class="mt-5">
             <!--Toolbar-->
-            <div id="toolbar" class="row border">
-                <div class="col border">
+            <div id="toolbar" class="row border ms-2 me-2">
+                <div class="col border p-2">
                     <!--Text Markup-->
                     
                         <a class="btn btn-outline-secondary dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
@@ -83,7 +83,7 @@
                         <i class="fa-solid fa-superscript"></i>
                     </span>
                 </div>
-                <div class="col border">
+                <div class="col border p-2">
                     <!--Alignments-->
                     <span class="btn btn-outline-secondary" data-action="justifyLeft" data-style="textAlign:left" title="Justify Left">
                         <i class="fa-solid fa-align-left"></i>
@@ -116,7 +116,7 @@
                         <i class="fa-solid fa-minus"></i>
                     </span>
                 </div>
-                <div class="col border">
+                <div class="col border p-2">
                     <!--Media and Code-->
                     <span class="btn btn-outline-secondary" data-action="createLink" title="Insert Link">
                         <i class="fa-solid fa-link"></i>
@@ -131,19 +131,42 @@
                         <i class="fa-regular fa-file-code"></i>
                     </span>    
                 </div>
-                <div class="col border">
+                <div class="col border p-2">
                     <!--Swap View-->
                     <span class="btn btn-outline-secondary" data-action="toggle-view" title="Show HTML-Code">
                         <i class="fa-solid fa-code"></i>
                     </span>
-                    <span class="btn btn-outline-secondary" data-action="help" title="Help">
+                    <span class="btn btn-outline-secondary" data-action="help" title="Help" >
                         <i class="fa-solid fa-question"></i>
                     </span>
                 </div>
             </div>
             <div id="content-area" class="row">
                 <div class="col">
-                    Hier komt de html shit
+                    <!--Visual View-->
+                    <div id="visualview" contenteditable="true">
+
+                    </div>
+                    <!--HTML View-->
+                    <textarea id="htmlview">
+                        
+                    </textarea>
+                </div>
+            </div>
+            <!--Modal-->
+            <div id="modalCreateLink" class="modal fade" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-header">
+                        <h5 id="modaltitle" class="modal-title">Modal Title</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div id="modalbody" class="modal-body">
+                        <p>Modal Text</p>
+                    </div>
+                    <div id="modalfooter" class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary">Save</button>
+                    </div>
                 </div>
             </div>
         </div>
