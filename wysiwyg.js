@@ -13,11 +13,11 @@ const isSupported = typeof window.getSelection !== "undefined";
 
 for(let i = 0; i < buttons.length; i++){
     let button = buttons[i];
-    button.addEventListener('click', function(){
+    button.addEventListener('click', function(e){
         let action = this.dataset.action;
 
         switch(action){
-            case 'createLink':CreateLink();
+            case 'createLink':CreateLink(e,visualview);
             break;
             default:Dummy();
         }
@@ -26,6 +26,12 @@ for(let i = 0; i < buttons.length; i++){
 
 document.addEventListener('click', (e) => updateIndex(e, visualview));
 document.addEventListener('keyup', (e) => updateIndex(e, visualview));
+document.addEventListener('click', (e) => UpdateStoredSelection(e, visualView));
+document.addEventListener('keyup', (e) => UpdateStoredSelection(e, visualView));
+
+let selectedText = "";
+let isInside = false;
+let selection = null;
 
 function getCaretIndex(element){
     let position = 0;
@@ -43,13 +49,35 @@ function getCaretIndex(element){
 function updateIndex(event, element) {
     const textPosition = document.getElementById("caretIndex");
     if (element.contains(event.target)) {
-      textPosition.innerText = getCaretIndex(element).toString();
+        textPosition.innerText = getCaretIndex(element).toString();
+        isInside = true;
     } else {
-      textPosition.innerText = "–";
+        console.log(element.contains(event.target));
+        textPosition.innerText = "–";
+        isInside = false;
     }
-  }
+}
 
-function CreateLink(){
+function UpdateStoredSelection(event, element){
+    if(element.contains(event.target)){
+        let sel = window.getSelection();
+        if(sel.getRangeAt && sel.rangeCount){
+            let ranges = [];
+            for(let i=0; i < sel.rangeCount; i++){
+                ranges.push(sel.getRangeAt(i));
+            }
+            selectedText = ranges;
+        }
+        else{
+            selectedText = "";
+        } 
+    }
+    else{
+        selectedText = "";
+    }
+}
+
+function CreateLink(event, element){
     //Give an alert they don't support the feature and break out.
     if(!isSupported){
         alert("Your browser doesn't support window.getSelection() but this is required for Create Link to work.");
@@ -57,8 +85,7 @@ function CreateLink(){
     } 
     console.log("Not fully functional");
     //modalTitle.textContent("Insert Link");
-    let selection = SaveSelection();
-    console.log("selection: " + selection);
+    
     //Create the Modal
     modalTitle.innerText = "Insert Link";
     modalBody.innerHTML = `<div class="mb-3">
@@ -71,12 +98,25 @@ function CreateLink(){
                             </div>`;
     modalFooter.innerHTML = `<button id=insertlink type="button" class="btn btn-primary">Insert Link</button>`;
     let displayText = document.getElementById("displaytext");
-    console.log(selection + " DIT IS MIJN SELECTIE");
     
-    if(selection != ""){
-        console.log("ik heb een selectie")
-        displayText.value = selection;
+    if(selectedText == ""){
+        //We have no selection.
+        displayText.value = "No Selection.";
+        if(!isInside){
+            displayText.value = "Out of bounds cursor.";
+        }
+        else{
+            displayText.value = "In of bounds cursor";
+        }
     }
+    else{
+        //Cursor in elk geval in de edit box.
+        displayText.value = "We got selection";
+    }
+
+
+   
+    
     let url = document.getElementById("url");
     let insertLinkButton = document.getElementById("insertlink");
     insertLinkButton.addEventListener('click', function(e){
@@ -85,7 +125,7 @@ function CreateLink(){
         //IF We have a selection, replace the selection with the final values.
 
 
-        RestoreSelection(selection);
+        RestoreSelection(selectedText);
 
         if(window.getSelection().toString()){
             let a = document.createElement('a');
@@ -112,40 +152,17 @@ function CreateLink(){
     $("#modal").modal('show');
 }
 
-function SaveSelection(){ 
-    if(window.getSelection){
-        sel = window.getSelection();
-        if(sel.getRangeAt && sel.rangeCount){
-            let ranges = [];
-            let len = sel.rangeCount;
-            for(let i=0; i < len; i++){
-                ranges.push(sel.getRangeAt(i));
-            }
-            console.log(ranges.toString());
-            return ranges;
-        }
-        else if(document.selection && document.selection.createRange){
-            console.log(document.selection.toString());
-            console.log(document.selection.createRange().toString());
-            return document.selection.createRange();
-        }
-    }   
-    return null;  
-}
+
 
 function RestoreSelection(savedSel){
+    console.log(savedSel + " savedSELSHIT");
     if(savedSel){
-        if(window.getSelection){
-            sel = window.getSelection();
-            sel.removeAllRanges();
-            let len = savedSel.length;
-            for(let i = 0; i < len; i++){
-                sel.addRange(savedSel[i]);
-            }
-        }
-        else if(document.selection && savedSel.select){
-            savedSel.select();
-        }
+        sel = window.getSelection();
+        sel.removeAllRanges();
+        let len = savedSel.length;
+        for(let i = 0; i < len; i++){
+            sel.addRange(savedSel[i]);
+        }       
     }
 }
 
