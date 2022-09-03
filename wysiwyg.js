@@ -26,11 +26,9 @@ for(let i = 0; i < buttons.length; i++){
 
 document.addEventListener('click', (e) => updateIndex(e, visualview));
 document.addEventListener('keyup', (e) => updateIndex(e, visualview));
-document.addEventListener('click', (e) => UpdateStoredSelection(e, visualView));
-document.addEventListener('keyup', (e) => UpdateStoredSelection(e, visualView));
+document.addEventListener('click', (e) => UpdateSelection(e, visualView));
+document.addEventListener('keyup', (e) => UpdateSelection(e, visualView));
 
-let selectedText = "";
-let isInside = false;
 let selection = null;
 
 function getCaretIndex(element){
@@ -50,30 +48,27 @@ function updateIndex(event, element) {
     const textPosition = document.getElementById("caretIndex");
     if (element.contains(event.target)) {
         textPosition.innerText = getCaretIndex(element).toString();
-        isInside = true;
     } else {
         console.log(element.contains(event.target));
         textPosition.innerText = "–";
-        isInside = false;
     }
 }
 
-function UpdateStoredSelection(event, element){
+function UpdateSelection(event, element){
     if(element.contains(event.target)){
         let sel = window.getSelection();
+        let ranges = [];
         if(sel.getRangeAt && sel.rangeCount){
-            let ranges = [];
+            
             for(let i=0; i < sel.rangeCount; i++){
                 ranges.push(sel.getRangeAt(i));
             }
-            selectedText = ranges;
+            selection = ranges;     
         }
-        else{
-            selectedText = "";
-        } 
+        selection = ranges; 
     }
     else{
-        selectedText = "";
+        selection = null;
     }
 }
 
@@ -83,6 +78,8 @@ function CreateLink(event, element){
         alert("Your browser doesn't support window.getSelection() but this is required for Create Link to work.");
         return;
     } 
+    let storedSelection = selection;
+    
     console.log("Not fully functional");
     //modalTitle.textContent("Insert Link");
     
@@ -99,23 +96,23 @@ function CreateLink(event, element){
     modalFooter.innerHTML = `<button id=insertlink type="button" class="btn btn-primary">Insert Link</button>`;
     let displayText = document.getElementById("displaytext");
     
-    if(selectedText == ""){
-        //We have no selection.
+    if(selection == null){
+        //We have no selection and not in the thing.
         displayText.value = "No Selection.";
-        if(!isInside){
-            displayText.value = "Out of bounds cursor.";
-        }
-        else{
-            displayText.value = "In of bounds cursor";
-        }
+        displayText.value = "Out of bounds cursor.";
+      
     }
     else{
-        //Cursor in elk geval in de edit box.
-        displayText.value = "We got selection";
+        if(selection == ""){
+            //it is in the thing without a selection
+            displayText.value = "In of bounds cursor";
+        }
+        else{
+
+            //Cursor in elk geval in de edit box.
+            displayText.value = "We got selection";
+        }
     }
-
-
-   
     
     let url = document.getElementById("url");
     let insertLinkButton = document.getElementById("insertlink");
@@ -125,7 +122,7 @@ function CreateLink(event, element){
         //IF We have a selection, replace the selection with the final values.
 
 
-        RestoreSelection(selectedText);
+        RestoreSelection(storedSelection);
 
         if(window.getSelection().toString()){
             let a = document.createElement('a');
@@ -144,15 +141,8 @@ function CreateLink(event, element){
         //IF there is no p tag at all. Then surround it with a p tag.
     
     });
-
-
-    console.log(displayText + "text gevonden");
-    console.log(url + "url gevonden");
-    //console.log(modal.firstChild);
     $("#modal").modal('show');
 }
-
-
 
 function RestoreSelection(savedSel){
     console.log(savedSel + " savedSELSHIT");
@@ -183,9 +173,7 @@ for(i=0; i < buttons.length; i++){
 console.log(contentArea);
 console.log(visualView);
 console.log(htmlView);
-//console.log(modal);
-//console.log(modalTitle);
-//console.log(modalBody);
-//console.log(modalFooter);
-
-
+console.log(modal);
+console.log(modalTitle);
+console.log(modalBody);
+console.log(modalFooter);
