@@ -9,6 +9,8 @@ const modalTitle = document.getElementById("modaltitle");
 const modalBody = document.getElementById("modalbody");
 const modalFooter = document.getElementById("modalfooter");
 
+const isSupported = typeof window.getSelection !== "undefined";
+
 for(let i = 0; i < buttons.length; i++){
     let button = buttons[i];
     button.addEventListener('click', function(){
@@ -22,7 +24,37 @@ for(let i = 0; i < buttons.length; i++){
     });
 }
 
+document.addEventListener('click', (e) => updateIndex(e, visualview));
+document.addEventListener('keyup', (e) => updateIndex(e, visualview));
+
+function getCaretIndex(element){
+    let position = 0;
+    const selection = window.getSelection();
+    if(selection.rangeCount !== 0){
+        const range = window.getSelection().getRangeAt(0);
+        const preCaretRange = range.cloneRange();
+        preCaretRange.selectNodeContents(element);
+        preCaretRange.setEnd(range.endContainer, range.endOffset);
+        position = preCaretRange.toString().length;
+    }
+    return position;
+}
+
+function updateIndex(event, element) {
+    const textPosition = document.getElementById("caretIndex");
+    if (element.contains(event.target)) {
+      textPosition.innerText = getCaretIndex(element).toString();
+    } else {
+      textPosition.innerText = "–";
+    }
+  }
+
 function CreateLink(){
+    //Give an alert they don't support the feature and break out.
+    if(!isSupported){
+        alert("Your browser doesn't support window.getSelection() but this is required for Create Link to work.");
+        return;
+    } 
     console.log("Not fully functional");
     //modalTitle.textContent("Insert Link");
     let selection = SaveSelection();
@@ -80,9 +112,8 @@ function CreateLink(){
     $("#modal").modal('show');
 }
 
-function SaveSelection(){
+function SaveSelection(){ 
     if(window.getSelection){
-        console.log("Ik krijg een true");
         sel = window.getSelection();
         if(sel.getRangeAt && sel.rangeCount){
             let ranges = [];
