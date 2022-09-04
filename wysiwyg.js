@@ -31,6 +31,7 @@ document.addEventListener('keyup', (e) => UpdateSelection(e, visualView));
 
 let selection = null;
 
+//This can be removed later on.
 function getCaretIndex(element){
     let position = 0;
     const selection = window.getSelection();
@@ -43,7 +44,7 @@ function getCaretIndex(element){
     }
     return position;
 }
-
+//this can be removed later on.
 function updateIndex(event, element) {
     const textPosition = document.getElementById("caretIndex");
     if (element.contains(event.target)) {
@@ -80,9 +81,6 @@ function CreateLink(event, element){
     } 
     let storedSelection = selection;
     
-    console.log("Not fully functional");
-    //modalTitle.textContent("Insert Link");
-    
     //Create the Modal
     modalTitle.innerText = "Insert Link";
     modalBody.innerHTML = `<div class="mb-3">
@@ -96,56 +94,74 @@ function CreateLink(event, element){
     modalFooter.innerHTML = `<button id=insertlink type="button" class="btn btn-primary">Insert Link</button>`;
     let displayText = document.getElementById("displaytext");
     
-    if(selection == null){
-        //We have no selection and not in the thing.
-        displayText.value = "No Selection.";
-        displayText.value = "Out of bounds cursor.";
-      
-    }
-    else{
+    if(selection != null){
         if(selection == ""){
-            //it is in the thing without a selection
-            displayText.value = "In of bounds cursor";
+            //Text Selected.
+            displayText.value = "LinkText";
         }
         else{
-
-            //Cursor in elk geval in de edit box.
-            displayText.value = "We got selection";
-        }
+            //Cursor in the box.
+            displayText.value = selection.toString();
+        }   
+    }
+    else{      
+        //Cursor not in the box.
+        displayText.value = "LinkText";
     }
     
     let url = document.getElementById("url");
     let insertLinkButton = document.getElementById("insertlink");
-    insertLinkButton.addEventListener('click', function(e){
-        console.log("Ik fire de insert link");
-        e.preventDefault();
-        //IF We have a selection, replace the selection with the final values.
 
+    //Add enter button to make the button work.
+    insertLinkButton.addEventListener('click', function(e){
+
+        
+        if(url.value == ""){
+            alert("URL can't be empty.");
+            return;
+        }
+        if(displayText.value == ""){
+            alert("The display text can't be empty.");
+            return;
+        }
+        //Make the enter button work if focus is within on off those 3 things.
+        //Make sure the esc button works.
+        //Make sure the x works.
+        //unsubscribe the eventlisteners when the modal goes away.
+
+
+        e.preventDefault();
+        
 
         RestoreSelection(storedSelection);
-
-        if(window.getSelection().toString()){
+        
+        if(storedSelection != null){
+            
+            replaceSelectedText(displayText.value);
+            let a = document.createElement('a');
+            a.href = url.value;
+            window.getSelection().getRangeAt(0).surroundContents(a);
+        }
+        else{
+            let range = document.createRange();
+            range.selectNodeContents(visualView);
+            range.collapse(false);
+            let sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            visualView.focus();
+            replaceSelectedText(displayText.value);
             let a = document.createElement('a');
             a.href = url.value;
             window.getSelection().getRangeAt(0).surroundContents(a);
         }
         $('#modal').modal('hide');
-        //IF We dont have a selection but we do have a cursor position.
-        //Enter the link at the position the cursor was at.
-        
-        //DO SHIT
-
-        //IF we dont have a selection and we do not have a cursor position
-        //Place it at the end in within the latest p tag.
-        
-        //IF there is no p tag at all. Then surround it with a p tag.
-    
     });
+
     $("#modal").modal('show');
 }
 
 function RestoreSelection(savedSel){
-    console.log(savedSel + " savedSELSHIT");
     if(savedSel){
         sel = window.getSelection();
         sel.removeAllRanges();
@@ -156,24 +172,16 @@ function RestoreSelection(savedSel){
     }
 }
 
+function replaceSelectedText(replacementText){
+    let sel, range;
+    sel = window.getSelection();
+    if(sel.rangeCount){
+        range = sel.getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(document.createTextNode(replacementText));
+    }
+}
 function Dummy(){
     console.log("NEED TO IMPLEMENT!!!");
 }
 
-//LogTesting Not really needed.
-console.log(editor);
-console.log(toolbar);
-console.log(buttons);
-console.log(buttons.length);
-
-for(i=0; i < buttons.length; i++){
-
-    console.log(buttons[i].title);
-}
-console.log(contentArea);
-console.log(visualView);
-console.log(htmlView);
-console.log(modal);
-console.log(modalTitle);
-console.log(modalBody);
-console.log(modalFooter);
