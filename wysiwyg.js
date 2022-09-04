@@ -11,13 +11,14 @@ const modalFooter = document.getElementById("modalfooter");
 
 const isSupported = typeof window.getSelection !== "undefined";
 
+//Adds the events for the buttons.
 for(let i = 0; i < buttons.length; i++){
     let button = buttons[i];
     button.addEventListener('click', function(e){
         let action = this.dataset.action;
 
         switch(action){
-            case 'createLink':CreateLink(e,visualview);
+            case 'createLink':CreateLink(e);
             break;
             default:Dummy();
         }
@@ -28,6 +29,7 @@ document.addEventListener('click', (e) => updateIndex(e, visualview));
 document.addEventListener('keyup', (e) => updateIndex(e, visualview));
 document.addEventListener('click', (e) => UpdateSelection(e, visualView));
 document.addEventListener('keyup', (e) => UpdateSelection(e, visualView));
+
 
 let selection = null;
 
@@ -50,11 +52,11 @@ function updateIndex(event, element) {
     if (element.contains(event.target)) {
         textPosition.innerText = getCaretIndex(element).toString();
     } else {
-        console.log(element.contains(event.target));
         textPosition.innerText = "–";
     }
 }
 
+//This function keeps track of what is selected.
 function UpdateSelection(event, element){
     if(element.contains(event.target)){
         let sel = window.getSelection();
@@ -73,15 +75,18 @@ function UpdateSelection(event, element){
     }
 }
 
-function CreateLink(event, element){
+let storedSelection
+
+function CreateLink(e){
     //Give an alert they don't support the feature and break out.
     if(!isSupported){
         alert("Your browser doesn't support window.getSelection() but this is required for Create Link to work.");
         return;
     } 
-    let storedSelection = selection;
+
+    storedSelection = selection;
     
-    //Create the Modal
+    //Set up the Modal
     modalTitle.innerText = "Insert Link";
     modalBody.innerHTML = `<div class="mb-3">
                                 <label for="displaytext" class="form-label">Text to display.</label>
@@ -93,7 +98,6 @@ function CreateLink(event, element){
                             </div>`;
     modalFooter.innerHTML = `<button id=insertlink type="button" class="btn btn-primary">Insert Link</button>`;
     let displayText = document.getElementById("displaytext");
-    
     if(selection != null){
         if(selection == ""){
             //Text Selected.
@@ -113,52 +117,77 @@ function CreateLink(event, element){
     let insertLinkButton = document.getElementById("insertlink");
 
     //Add enter button to make the button work.
-    insertLinkButton.addEventListener('click', function(e){
-
-        
-        if(url.value == ""){
-            alert("URL can't be empty.");
-            return;
-        }
-        if(displayText.value == ""){
-            alert("The display text can't be empty.");
-            return;
-        }
-        //Make the enter button work if focus is within on off those 3 things.
-        //Make sure the esc button works.
-        //Make sure the x works.
-        //unsubscribe the eventlisteners when the modal goes away.
-
-
-        e.preventDefault();
-        
-
-        RestoreSelection(storedSelection);
-        
-        if(storedSelection != null){
-            
-            replaceSelectedText(displayText.value);
-            let a = document.createElement('a');
-            a.href = url.value;
-            window.getSelection().getRangeAt(0).surroundContents(a);
-        }
-        else{
-            let range = document.createRange();
-            range.selectNodeContents(visualView);
-            range.collapse(false);
-            let sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
-            visualView.focus();
-            replaceSelectedText(displayText.value);
-            let a = document.createElement('a');
-            a.href = url.value;
-            window.getSelection().getRangeAt(0).surroundContents(a);
-        }
-        $('#modal').modal('hide');
+    insertLinkButton.addEventListener('click', function(){
+        InsertLink(e, displayText,url);
     });
-
+    
+    insertLinkButton.addEventListener("keydown", function(e){
+        if(e.key === "Enter"){
+            InsertLink(e, displayText,url);
+        }
+    });
+    displayText.addEventListener("keydown", function(e){
+        if(e.key === "Enter"){
+            InsertLink(e, displayText,url);
+        }
+    });
+    url.addEventListener("keydown", function(e){
+        if(e.key === "Enter"){
+            InsertLink(e, displayText,url);
+        }
+    });
+    
     $("#modal").modal('show');
+
+    //Not sure if this is needed, but I guess it can't really harm either.
+    //Removes the eventListeners from the modal.
+    modal.addEventListener('hide.bs.modal', function(e){
+        insertLinkButton.removeEventListener('click', arguments.callee);
+        insertLinkButton.removeEventListener('keydown', arguments.callee);
+        displayText.removeEventListener('keydown', arguments.callee);
+        url.removeEventListener('keydown', arguments.callee);
+        modal.removeEventListener('hide.bs.modal', arguments.callee);
+    });
+}
+
+function InsertLink(e, displayText, url){
+    if(url.value == ""){
+        alert("URL can't be empty.");
+        return;
+    }
+    if(displayText.value == ""){
+        alert("The display text can't be empty.");
+        return;
+    }
+    
+    //unsubscribe the eventlisteners when the modal goes away.
+
+
+    e.preventDefault();
+    
+    RestoreSelection(storedSelection);
+    
+    if(storedSelection != null){
+        
+        replaceSelectedText(displayText.value);
+        let a = document.createElement('a');
+        a.href = url.value;
+        window.getSelection().getRangeAt(0).surroundContents(a);
+    }
+    else{
+        let range = document.createRange();
+        range.selectNodeContents(visualView);
+        range.collapse(false);
+        let sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        visualView.focus();
+        replaceSelectedText(displayText.value);
+        let a = document.createElement('a');
+        a.href = url.value;
+        window.getSelection().getRangeAt(0).surroundContents(a);
+    }
+    $('#modal').modal('hide');
 }
 
 function RestoreSelection(savedSel){
