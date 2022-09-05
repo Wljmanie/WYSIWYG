@@ -26,10 +26,76 @@ for(let i = 0; i < buttons.length; i++){
 }
 
 document.addEventListener('click', (e) => updateIndex(e, visualview));
-document.addEventListener('keyup', (e) => updateIndex(e, visualview));
+document.addEventListener('keydown', (e) => updateIndex(e, visualview));
 document.addEventListener('click', (e) => UpdateSelection(e, visualView));
-document.addEventListener('keyup', (e) => UpdateSelection(e, visualView));
+document.addEventListener('keydown', (e) => UpdateSelection(e, visualView));
 
+visualView.addEventListener('keydown', function(e){
+    
+        HandleEnter(e)
+    
+});
+    
+
+function HandleEnter(e){
+
+    //if the last character is a zero-width space, remove it
+  
+  let lastCharCode = visualView.charCodeAt(visualView.length - 1);
+  if (lastCharCode == 8203) {
+    contentEditableHTML.html(contentEditableHTML.slice(0, -1));
+  }
+
+    if(e.key === "Enter" && e.shiftKey){
+        //Insert <BR>
+        e.preventDefault();
+        
+        let br = document.createElement("br");
+        let zwsp = document.createTextNode("\u200B");
+        let range = selection.getRangeAt(0);
+        let textNodeParent = document.getSelection().anchorNode.parentNode;
+        let inSpan = textNodeParent.nodeName == "SPAN";
+        var span = document.createElement("span");
+
+        if(inSpan){
+            range.setStartAfter(textNodeParent);
+            range.setEndAfter(textNodeParent);
+        }
+
+        range.deleteContents();
+        range.insertNode(br);
+        range.setStartAfter(br);
+        range.setEndAfter(br);
+
+        if(inSpan){
+            range.insertNode(span);
+            range.setStartAfter(span, 0);
+            range.setEnd(span,0);
+        }
+
+        range.insertNode(zwsp);
+        range.setStartBefore(zwsp);
+        range.setEndBefore(zwsp);
+        selection.removeAllRanges();
+        selection.addRange(range);
+
+    
+        
+    
+    
+    }
+    if(e.key === "Enter"){
+        //Insert <p>    </p>
+        e.preventDefault();
+
+
+    }
+    
+
+
+
+
+}
 
 let selection = null;
 
@@ -51,6 +117,8 @@ function updateIndex(event, element) {
     const textPosition = document.getElementById("caretIndex");
     if (element.contains(event.target)) {
         textPosition.innerText = getCaretIndex(element).toString();
+        //This update needs to be gone or places somewhere else in the future.
+        htmlView.innerText = visualView.innerHTML + "";
     } else {
         textPosition.innerText = "–";
     }
@@ -61,8 +129,7 @@ function UpdateSelection(event, element){
     if(element.contains(event.target)){
         let sel = window.getSelection();
         let ranges = [];
-        if(sel.getRangeAt && sel.rangeCount){
-            
+        if(sel.getRangeAt && sel.rangeCount){         
             for(let i=0; i < sel.rangeCount; i++){
                 ranges.push(sel.getRangeAt(i));
             }
@@ -159,12 +226,8 @@ function InsertLink(e, displayText, url){
         alert("The display text can't be empty.");
         return;
     }
-    
-    //unsubscribe the eventlisteners when the modal goes away.
-
 
     e.preventDefault();
-    
     RestoreSelection(storedSelection);
     
     if(storedSelection != null){
@@ -187,6 +250,7 @@ function InsertLink(e, displayText, url){
         a.href = url.value;
         window.getSelection().getRangeAt(0).surroundContents(a);
     }
+
     $('#modal').modal('hide');
 }
 
