@@ -40,19 +40,24 @@ visualView.addEventListener('keydown', function(e){
 function HandleEnter(e){
 
     //if the last character is a zero-width space, remove it
-  
-  let lastCharCode = visualView.charCodeAt(visualView.length - 1);
+  let contentEditableHTML = visualView.innerHTML;
+  console.log("CONTENT: " + contentEditableHTML);
+  let lastCharCode = contentEditableHTML.charCodeAt(contentEditableHTML.length - 1);
   if (lastCharCode == 8203) {
     contentEditableHTML.html(contentEditableHTML.slice(0, -1));
   }
 
     if(e.key === "Enter" && e.shiftKey){
         //Insert <BR>
+        //NEED TO TEST IN SPAN HOW IT WORKS
         e.preventDefault();
-        
+        console.log("insert br");
         let br = document.createElement("br");
         let zwsp = document.createTextNode("\u200B");
-        let range = selection.getRangeAt(0);
+        
+        let sel = window.getSelection();
+
+        let range = sel.getRangeAt(0);
         let textNodeParent = document.getSelection().anchorNode.parentNode;
         let inSpan = textNodeParent.nodeName == "SPAN";
         var span = document.createElement("span");
@@ -76,25 +81,33 @@ function HandleEnter(e){
         range.insertNode(zwsp);
         range.setStartBefore(zwsp);
         range.setEndBefore(zwsp);
-        selection.removeAllRanges();
-        selection.addRange(range);
-
-    
-        
-    
-    
+        sel.removeAllRanges();
+        sel.addRange(range); 
     }
-    if(e.key === "Enter"){
+    if(e.key === "Enter" && !e.shiftKey){
         //Insert <p>    </p>
+        console.log("insert p");
         e.preventDefault();
-
-
+        let p = document.createElement("p");
+        let sel = window.getSelection();
+        let range = sel.getRangeAt(0);
+        textNodeParent = document.getSelection().anchorNode.parentNode;
+        let inP = textNodeParent.nodeName == "P";
+        if(inP){
+            range.setStartAfter(textNodeParent);
+            range.setEndAfter(textNodeParent);
+        }
+        range.deleteContents();
+        range.insertNode(p);
+        let zwsp = document.createTextNode("\u200B");
+        //range.insertNode(zwsp);
+        p.appendChild(zwsp);
+        range.setStartBefore(zwsp);
+        range.setEndBefore(zwsp);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        
     }
-    
-
-
-
-
 }
 
 let selection = null;
