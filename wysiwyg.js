@@ -11,6 +11,9 @@ const modalFooter = document.getElementById("modalfooter");
 
 const isSupported = typeof window.getSelection !== "undefined";
 
+//TODO on string cleaning remove the &zerowidthwhitespace
+//TODO replacing text for links, when stuff is selected over more then one element like a P it destroys the stuff.
+
 //Adds the events for the buttons.
 for(let i = 0; i < buttons.length; i++){
     let button = buttons[i];
@@ -91,22 +94,34 @@ function HandleEnter(e){
         let p = document.createElement("p");
         let sel = window.getSelection();
         let range = sel.getRangeAt(0);
+        console.log("SEL: " + sel);
+        console.log("RANGE BEFORE:" + range);
         textNodeParent = document.getSelection().anchorNode.parentNode;
-        let inP = textNodeParent.nodeName == "P";
-        if(inP){
+        myCurrentNode = document.getSelection().anchorNode;
+        console.log("ANCHORNODE: " + myCurrentNode);
+        console.log("textNODEPARENT: " + textNodeParent);
+          
+       
+        if(textNodeParent.nodeName == "P"){
             range.setStartAfter(textNodeParent);
             range.setEndAfter(textNodeParent);
+        }
+        else if(myCurrentNode.nodeName == "P"){
+            range.setStartAfter(myCurrentNode);
+            range.setEndAfter(myCurrentNode);
         }
         range.deleteContents();
         range.insertNode(p);
         let zwsp = document.createTextNode("\u200B");
-        //range.insertNode(zwsp);
+        
         p.appendChild(zwsp);
-        range.setStartBefore(zwsp);
-        range.setEndBefore(zwsp);
+        //range.setStartBefore(zwsp);
+        //range.setEndBefore(zwsp);
+        range.selectNode(zwsp);
         sel.removeAllRanges();
         sel.addRange(range);
-        
+        console.log("RANGE AFTER:" + range);
+       
     }
 }
 
