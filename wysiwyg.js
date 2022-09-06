@@ -55,8 +55,77 @@ function MakeBold(e){
     let sel = window.getSelection();
     if(sel.containsNode(visualView, true)){
         //Stuff is selected inside.
-        //MAYBE NEED TO DITCH STUFF THAT IS OUTSIDE. NEED TO TEST
+        //Only the cursor is inside
+        if(sel == ""){
+            //We create the span tag in here and put the cursor in the middle.
+            console.log("called this shit");
+            CreateElementAtCursor("bold", sel);
 
+        }
+        else{
+            //WE HAVE BIG SELECTION
+            //MAYBE NEED TO DITCH STUFF THAT IS OUTSIDE. NEED TO TEST
+            console.log("Selection: " + sel);
+        
+            console.log("selection len: " + sel.rangeCount);
+            console.log("anchorNode: " + sel.anchorNode);
+            console.log("parentNode: " + sel.parentNode);
+            console.log("focusNode: " + sel.focusNode); //this is the end node.
+            console.log("nextNode: " + sel.anchorNode.nextSibling);
+        
+            let ranges = [];
+            
+
+            //Check if the selection is backwards.
+
+            console.log(isSelectionBackwards(sel));
+
+            if(isSelectionBackwards(sel)){
+                destinationNode = sel.anchorNode;
+                currentNode = sel.focusNode;
+            }
+            else{
+                currentNode = sel.anchorNode;
+                destinationNode = sel.focusNode;
+            }
+
+            while(!currentNode.isSameNode(destinationNode)){
+                console.log("Loop currentNode: " + currentNode);
+                console.log("Loop currentNodeName: " + currentNode.nodeName);
+                console.log("Loop currentNodeType: " + currentNode.nodeType);
+                //If it is inside visualview add it to our ranges.
+                if(visualView.contains(currentNode)){
+                    console.log("IM INSIDE");
+                    let tempRange;
+                    tempRange.createRange();
+                    tempRange.selectNode(currentNode);
+                    ranges.push(tempRange);
+                }
+
+                if(currentNode.firstChild != null){
+                    currentNode = currentNode.firstChild;
+                }
+                else if (currentNode.nextSibling != null){
+                    
+                    currentNode = currentNode.nextSibling;
+                }
+                else if(currentNode.parentNode.nextSibling != null){
+                    currentNode = currentNode.parentNode.nextSibling;
+                }
+            }
+
+            //loop through are nodes in the new range.
+            //create a span in each P element that covers it whole.
+            
+            console.log("Finished loop");
+            console.log("RANGE LENGTH: " + ranges.length);
+            for(i=0; i < ranges.length; i++){
+                console.log("In RANGES: " + ranges[i].nodeName);
+            }
+            
+        }
+
+        
 
     }
     else{
@@ -72,6 +141,36 @@ function MakeBold(e){
 
     //If there is more, place a span tag around it with bold for each text node.
 
+}
+
+function isSelectionBackwards(sel){
+    let backwards = false;
+    if(!sel.Collapsed){
+        let range = document.createRange();
+        range.setStart(sel.anchorNode, sel.anchorOffSet);
+        range.setEnd(sel.focusNode, sel.focusOffset);
+        backwards = range.collapsed;
+        range.detach();
+    }
+    return backwards;
+}
+function CreateElementAtCursor(elementclass, sel){
+    let zwsp = document.createTextNode("\u200B");
+    let range = sel.getRangeAt(0);
+    let element = document.createElement('span');
+    
+    switch(elementclass){
+        case 'bold' : element.classList.add("fw-bold");
+        break;
+        case 'italic' : element.classList.add("fst-italic");
+        break;
+        default : console.log("ElementClass not recognized.");
+    }
+    range.insertNode(element);
+    element.appendChild(zwsp);
+    range.selectNode(zwsp);
+    sel.removeAllRanges();
+    sel.addRange(range);
 }
 
 function CreateElementAtTheEnd(elementclass, sel){
@@ -167,8 +266,8 @@ function HandleEnter(e){
         let range = sel.getRangeAt(0);
         textNodeParent = document.getSelection().anchorNode.parentNode;
         myCurrentNode = document.getSelection().anchorNode;
-        console.log("NodeParent: " + textNodeParent);
-        console.log("Current Node: " + myCurrentNode);  
+        //console.log("NodeParent: " + textNodeParent);
+        //console.log("Current Node: " + myCurrentNode);  
         if(textNodeParent.nodeName == "P"){
             range.setStartAfter(textNodeParent);
             range.setEndAfter(textNodeParent);
@@ -177,6 +276,7 @@ function HandleEnter(e){
             range.setStartAfter(myCurrentNode);
             range.setEndAfter(myCurrentNode);
         }
+        //TODO NEED TO CHECK TILL I GET OUT OF ALL THE SPANS.
         else if(textNodeParent.nodeName == "SPAN"){
             let tempNode = document.getSelection().anchorNode.parentNode.parentNode;
             if( tempNode.nodeName == "P"){
