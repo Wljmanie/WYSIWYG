@@ -13,6 +13,15 @@ const isSupported = typeof window.getSelection !== "undefined";
 
 //TODO on string cleaning remove the &zerowidthwhitespace
 //TODO replacing text for links, when stuff is selected over more then one element like a P it destroys the stuff.
+//TODO disable drag and drop or fix it.
+
+//TODO FOR NEXT TIME
+//Make Bold work.
+//Make Italic work.
+//Make Underline work.
+//Make strikethrough work.
+//Insert a code block.
+
 
 //Adds the events for the buttons.
 for(let i = 0; i < buttons.length; i++){
@@ -22,6 +31,8 @@ for(let i = 0; i < buttons.length; i++){
 
         switch(action){
             case 'createLink':CreateLink(e);
+            break;
+            case `bold`:MakeBold(e);
             break;
             default:Dummy();
         }
@@ -38,13 +49,75 @@ visualView.addEventListener('keydown', function(e){
         HandleEnter(e)
     
 });
+
+function MakeBold(e){
+    //Check if the cursor is inside.
+    let sel = window.getSelection();
+    if(sel.containsNode(visualView, true)){
+        //Stuff is selected inside.
+        //MAYBE NEED TO DITCH STUFF THAT IS OUTSIDE. NEED TO TEST
+
+
+    }
+    else{
+        //Shit is not inside.
+        CreateElementAtTheEnd("bold", sel);
+    }
+
     
+    
+    //If cursor is inside.
+    //Check if there is more selection then ""
+    //if "" create a span with bold, put the cursor inside
+
+    //If there is more, place a span tag around it with bold for each text node.
+
+}
+
+function CreateElementAtTheEnd(elementclass, sel){
+    let zwsp = document.createTextNode("\u200B");
+    let range = document.createRange();
+    range.selectNodeContents(visualView);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    visualView.focus();
+    let element = document.createElement('span');
+    
+    switch(elementclass){
+        case 'bold' : element.classList.add("fw-bold");
+        break;
+        case 'italic' : element.classList.add("fst-italic");
+        break;
+        default : console.log("ElementClass not recognized.");
+    }
+    range.insertNode(element);
+    p = document.createElement('p');
+    range.surroundContents(p);
+    element.appendChild(zwsp);
+    range.selectNode(zwsp);
+    sel.removeAllRanges();
+    sel.addRange(range);
+}
+    
+document.addEventListener('selectionchange',(e) => selectionChange(e, visualView));
+
+function selectionChange(e, element){
+    //I can use this for activating and deactivating buttons.
+    let sel = window.getSelection();
+    if(sel.containsNode(element, true)){
+        console.log("I am a child of the thingy and therefore inside.");
+    }
+
+   
+    
+}
 
 function HandleEnter(e){
 
     //if the last character is a zero-width space, remove it
   let contentEditableHTML = visualView.innerHTML;
-  console.log("CONTENT: " + contentEditableHTML);
+  
   let lastCharCode = contentEditableHTML.charCodeAt(contentEditableHTML.length - 1);
   if (lastCharCode == 8203) {
     contentEditableHTML.html(contentEditableHTML.slice(0, -1));
@@ -54,18 +127,16 @@ function HandleEnter(e){
         //Insert <BR>
         //NEED TO TEST IN SPAN HOW IT WORKS
         e.preventDefault();
-        console.log("insert br");
         let br = document.createElement("br");
-        let zwsp = document.createTextNode("\u200B");
-        
+        let zwsp = document.createTextNode("\u200B");      
         let sel = window.getSelection();
-
         let range = sel.getRangeAt(0);
         let textNodeParent = document.getSelection().anchorNode.parentNode;
         let inSpan = textNodeParent.nodeName == "SPAN";
         var span = document.createElement("span");
 
         if(inSpan){
+            console.log("Im span when creating a br.");
             range.setStartAfter(textNodeParent);
             range.setEndAfter(textNodeParent);
         }
@@ -76,6 +147,7 @@ function HandleEnter(e){
         range.setEndAfter(br);
 
         if(inSpan){
+            //TODO need to copy the span classlist.
             range.insertNode(span);
             range.setStartAfter(span, 0);
             range.setEnd(span,0);
@@ -89,19 +161,14 @@ function HandleEnter(e){
     }
     if(e.key === "Enter" && !e.shiftKey){
         //Insert <p>    </p>
-        console.log("insert p");
         e.preventDefault();
         let p = document.createElement("p");
         let sel = window.getSelection();
         let range = sel.getRangeAt(0);
-        console.log("SEL: " + sel);
-        console.log("RANGE BEFORE:" + range);
         textNodeParent = document.getSelection().anchorNode.parentNode;
         myCurrentNode = document.getSelection().anchorNode;
-        console.log("ANCHORNODE: " + myCurrentNode);
-        console.log("textNODEPARENT: " + textNodeParent);
-          
-       
+        console.log("NodeParent: " + textNodeParent);
+        console.log("Current Node: " + myCurrentNode);  
         if(textNodeParent.nodeName == "P"){
             range.setStartAfter(textNodeParent);
             range.setEndAfter(textNodeParent);
@@ -110,18 +177,24 @@ function HandleEnter(e){
             range.setStartAfter(myCurrentNode);
             range.setEndAfter(myCurrentNode);
         }
+        else if(textNodeParent.nodeName == "SPAN"){
+            let tempNode = document.getSelection().anchorNode.parentNode.parentNode;
+            if( tempNode.nodeName == "P"){
+                range.setStartAfter(tempNode);
+                range.setEndAfter(tempNode);
+            }
+            else{
+                console.log("Something went wrong.");
+            }
+        }
+
         range.deleteContents();
         range.insertNode(p);
-        let zwsp = document.createTextNode("\u200B");
-        
+        let zwsp = document.createTextNode("\u200B");    
         p.appendChild(zwsp);
-        //range.setStartBefore(zwsp);
-        //range.setEndBefore(zwsp);
         range.selectNode(zwsp);
         sel.removeAllRanges();
         sel.addRange(range);
-        console.log("RANGE AFTER:" + range);
-       
     }
 }
 
