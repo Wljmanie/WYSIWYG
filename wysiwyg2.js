@@ -55,6 +55,8 @@
                 if so, just add bold.
                 if not, split the remaining.
         Can a ruler be selected?
+
+    MULTIPLESELECTION IN FIREFOX IS NOT SUPPORTED AT THIS MOMENT, IT WILL ONLY TAKE THE FIRST!
 */
 
 //Makes sure they don't run an ancient browser.
@@ -72,13 +74,17 @@ visualView.addEventListener('keydown', function(e){
     HandleEnter(e);
 });
 
-
-
 //Makes it so we can see what happens currently.
 visualView.addEventListener("keyup", function(e){
     htmlView.innerText = visualView.innerHTML;
 });
-
+document.addEventListener('selectionchange', () => {
+    let selection = window.getSelection();
+    //console.log("BADSELECTION?: " + isBadSelection(selection));
+    isBadSelection(selection);
+    console.log("We finished loop;");
+  });
+//END OF TEMP SHIT
 
 function HandleEnter(e){
     //Make sure we have the Enter key.
@@ -98,8 +104,6 @@ function HandleEnter(e){
             let selection = window.getSelection();
             let range = selection.getRangeAt(0);
             //We moeten nog even kijken of er meerdere spans in de P tag zitten.
-
-
             //We should always be in a text node, so lets check for it.
             let node = selection.anchorNode;
             console.log(node.nodeName);
@@ -117,7 +121,7 @@ function HandleEnter(e){
                             console.log("Our parent is a span.");
                             console.log("ervoor?" + node.parentNode.previousSibling);
                             if(node.parentNode.previousSibling == null){
-                                if(node.parentNode.parentNode.nodeName == "P"){
+                                if(node.parentNode.parentNode.nodeName == "P"){                             
                                     console.log("We hebben onze P tag.");
                                     range.setStartBefore(node.parentNode.parentNode);
                                     range.setEndBefore(node.parentNode.parentNode);
@@ -171,11 +175,7 @@ function HandleEnter(e){
                         }
                     }
                     else if(position > 0 && position < node.length){
-                        console.log("We zitten ergens in het midden van de text node.");
-                        //kijk of we nog andere dingen achter ons hebben.
-                        //Zo ja nemen we die ook mee naar de nieuwe P.
-                        //split de huidige span in 2 spans die hetzelfde zijn.
-                        
+                        console.log("We zitten ergens in het midden van de text node.");               
                         if(node.parentNode.nodeName == "SPAN"){
                             console.log("Our parent is a span.");
                             //console.log("erna?" + node.parentNode.nextSibling);
@@ -189,11 +189,13 @@ function HandleEnter(e){
                                     range.setStartAfter(node.parentNode.parentNode);
                                     range.setEndAfter(node.parentNode.parentNode);
                                     p = document.createElement("P");
-                                    span = document.createElement("SPAN");
+                                    span = document.createElement("SPAN");                            
                                     contentToTake = document.createTextNode(content.tostring);
                                     range.insertNode(p);
                                     p.appendChild(span);
                                     span.appendChild(content);
+                                    span.className = node.parentElement.getAttributeNode("class").value;
+                                    //span.setAttribute('class', node.parentNode.attributes);
                                     //console.log("SPAN CHILD: " + span.firstChild.nodeName);
                                     range.setStartBefore(span.firstChild);
                                     range.setEndBefore(span.firstChild);
@@ -209,10 +211,6 @@ function HandleEnter(e){
                             else{
                                 if(node.parentNode.parentNode.nodeName == "P"){
                                     //We need to grab our next sibling spans.
-                                    
-
-
-
                                     console.log("We hebben onze P tag.");
                                     range.setEnd(node, node.length);
                                     let content = range.extractContents();
@@ -224,6 +222,7 @@ function HandleEnter(e){
                                     range.insertNode(p);
                                     p.appendChild(span);
                                     span.appendChild(content);
+                                    span.className = node.parentElement.getAttributeNode("class").value;
 
                                     let finalSiblingNode = node.parentNode;
                                     let spansToMove = [];
@@ -240,8 +239,6 @@ function HandleEnter(e){
                                         let nodeMove = spansToMove[i];
                                         p.appendChild(nodeMove);
                                     }
-                                    
-
                                     //console.log("SPAN CHILD: " + span.firstChild.nodeName);
                                     range.setStartBefore(span.firstChild);
                                     range.setEndBefore(span.firstChild);
@@ -255,78 +252,153 @@ function HandleEnter(e){
                                 }
                             }
                         }
-
-
-
-
                     }
                     else{
                         console.log("Er is iets mis gegaan.");
                     }
-
                 }
                 else{
                     console.log("We hebben wat geselecteerd.");
                     //Delete wat we hebben geselecteerd. We moeten uitkijken wat we precies geselecteerd hebben.
+                    //Wat hebben we geselecteerd?
+                        //We hebben een gedeeltelijke node.
+                        //We hebben een volledige node.
+                        //We hebben twee gedeeltelijke nodes
+                        //we hebben een gedeeltelijke node en een volledige node.
+                        //we hebben een gedeeltelijke node en meerdere volledige nodes.
+                        //we hebben meerdere gedeeltelijke nodes.
+
+                        //Ik denk dat we alle nodes moeten pakken.
+                        //Dan loopen we door elke node.
+                            //We handelen een volledige node.
+                                //als het de laatste node was. Delete de P ook.
+                            //We handelen een gedeelte node.
+                    
+                    //We select something bad. This should never trigger.
+                    if(isBadSelection(selection)){
+                        alert("Your selection is containing things outside the input box.");
+                        return; 
+                    }
+                    let textNodes = [];
+                    let currentNode;
+                    let startingNode;
+                    let destinationNode;
+                    let startingNodeOffset;
+                    let destinationNodeOffset;
+    
+                    if(isSelectionBackwards(selection)){
+                        currentNode = selection.focusNode;
+                        startingNode = selection.focusNode;
+                        destinationNode = selection.anchorNode;
+                        startingNodeOffset = selection.focusOffset;
+                        destinationNode = selection.anchorOffset;
+                    }
+                    //This might be redundant.
+                    else{
+                        currentNode = selection.anchorNode;
+                        startingNode = selection.anchorNode;
+                        destinationNode = selection.focusNode;
+                        startingNodeOffset = selection.anchorOffset;
+                        destinationOffset = selection.focusOffset;
+                    }
+
+                    while(!currentNode.isSameNode(destinationNode)){
+                        //console.log("Loop currentNode: " + currentNode);
+                        //console.log("Loop currentNodeName: " + currentNode.nodeName);
+                        //console.log("Loop currentNodeType: " + currentNode.nodeType);
+                        //If it is inside visualview add it to our ranges.
+                        if(currentNode.nodeName == "#text"){
+                            console.log("We have a text node.");
+                            textNodes.push(currentNode);
+                        }
+                        else{
+                            console.log("We have a non text node: " + currentNode.nodeName);
+                            //we ignore it.
+                        }
+                
+                        if(currentNode.firstChild != null){
+                            currentNode = currentNode.firstChild;
+                        }
+                        else if (currentNode.nextSibling != null){
+                            
+                            currentNode = currentNode.nextSibling;
+                        }
+                        else if(currentNode.parentNode.nextSibling != null){
+                            currentNode = currentNode.parentNode.nextSibling;
+                        }
+                        else if(currentNode.parentNode.parentNode.nextSibling != null){
+                            currentNode = currentNode.parentNode.parentNode.nextSibling;
+                        }
+                        else{
+                            console.warn("We are going to loop since we don't change the current node. WE NEED TO FIX THIS.");
+                            //IF THIS STILL OCCURS, we have to fix it in a different way.
+                            return;
+                        }
+
+                    }
+                    //We need to grab the last one as well.
+                    if(currentNode.isSameNode(destinationNode)){
+                        textNodes.push(currentNode);
+                    }
+                    console.log("We hebben text nodes gevonden en wel: " + textNodes.length);
+                    
+
+
+
                 }
             }
             else{
                 //IT CAN HIT A SPAN, We need to check if the text node only contains a wszp.
-                //if thats the case we can still make a new P
+                //if thats the case we can still make a new P      
                 if(node.firstChild.nodeName == "#text"){
                     console.log("We hebben onze text");
                     //lastCharCode == 8203
                     if(node.firstChild.textContent.charCodeAt(0) == 8203){
                         console.log("Het is een whitespace.");
+                        if(node.firstChild.textContent.length == 1){
+                            console.log("Het is alleen een whitespace!");
+                            //switch the node to the correct text node.
+                            node = node.firstChild;
 
-                        //switch the node to the correct text node.
-                        node = node.firstChild;
-
-                        if(node.parentNode.nodeName == "SPAN"){
-                            console.log("Our parent is a span.");
-                            console.log("erna?" + node.parentNode.nextSibling);
-                            if(node.parentNode.nextSibling == null){
-                                //We create a p and a span tag in it, then put the cursor focus in the span.
-                                //We create it after our current P
-                                if(node.parentNode.parentNode.nodeName == "P"){
-                                    console.log("We hebben onze P tag.");
-                                    range.setStartAfter(node.parentNode.parentNode);
-                                    range.setEndAfter(node.parentNode.parentNode);
-                                    p = document.createElement("P");
-                                    span = document.createElement("SPAN");
-                                    zwsp = document.createTextNode("\u200B");
-                                    range.insertNode(p);
-                                    p.appendChild(span);
-                                    span.appendChild(zwsp);
-                                    range.selectNode(zwsp);
-                                    selection.removeAllRanges();
-                                    selection.addRange(range);                            
-                                    range.detach();
-                                    console.log("Created the new P.");
+                            if(node.parentNode.nodeName == "SPAN"){
+                                console.log("Our parent is a span.");
+                                console.log("erna?" + node.parentNode.nextSibling);
+                                if(node.parentNode.nextSibling == null){
+                                    //We create a p and a span tag in it, then put the cursor focus in the span.
+                                    //We create it after our current P
+                                    if(node.parentNode.parentNode.nodeName == "P"){
+                                        console.log("We hebben onze P tag.");
+                                        range.setStartAfter(node.parentNode.parentNode);
+                                        range.setEndAfter(node.parentNode.parentNode);
+                                        p = document.createElement("P");
+                                        span = document.createElement("SPAN");
+                                        zwsp = document.createTextNode("\u200B");
+                                        range.insertNode(p);
+                                        p.appendChild(span);
+                                        span.appendChild(zwsp);
+                                        range.selectNode(zwsp);
+                                        selection.removeAllRanges();
+                                        selection.addRange(range);                            
+                                        range.detach();
+                                        console.log("Created the new P.");
+                                    }
+                                    else{
+                                        console.log("We hebben onze P tag niet gevonden!");
+                                    }
                                 }
-                                else{
-                                    console.log("We hebben onze P tag niet gevonden!");
-                                }
-                            }
+                            }                   
+                            else{
+                                console.log("Het is een whitespace, maar er zijn meerdere characters.");
+                            }                       
                         }
-
-
-
-
-
-
-
                     }
-
-                }
-                
+                }            
                 console.log("Something went wrong, we try to push enter outside of a text node");
                 //If everything is deleted it can hit P without span, or div. without p.
                 //Need to fix those two edge cases.
 
                 console.log("NODENAME: " + node.nodeName);
             }
-
 /*
             
         textNodeParent = document.getSelection().anchorNode.parentNode;
@@ -361,20 +433,78 @@ function HandleEnter(e){
         sel.removeAllRanges();
         sel.addRange(range);*/
         }
-
-
-
-
-
-
-
-
-
-
-
-
     }
 }
+
+//HELPER FUNCTIONS FOR SELECTION
+function isSelectionBackwards(selection){
+    let backwards = false;
+    if(selection == null){
+        console.log("This is happening?!");
+        return backwards;
+    }
+    if(!selection.Collapsed){
+        let range = document.createRange();
+        range.setStart(selection.anchorNode, selection.anchorOffset);
+        range.setEnd(selection.focusNode, selection.focusOffset);
+        backwards = range.collapsed;  
+        range.detach();  
+    }
+    return backwards;
+}
+
+function isBadSelection(selection){
+    
+    let currentNode;
+    let destinationNode;
+    
+    if(isSelectionBackwards(selection)){
+        currentNode = selection.focusNode;
+        destinationNode = selection.anchorNode;
+    }
+    //This might be redundant.
+    else{
+        currentNode = selection.anchorNode;
+        destinationNode = selection.focusNode;
+    }
+
+    while(!currentNode.isSameNode(destinationNode)){
+        //console.log("Loop currentNode: " + currentNode);
+        //console.log("Loop currentNodeName: " + currentNode.nodeName);
+        //console.log("Loop currentNodeType: " + currentNode.nodeType);
+        //If it is inside visualview add it to our ranges.
+        if(!visualView.contains(currentNode)){
+            console.log("IM NOT INSIDE, so bad selection");
+            return true;
+            //let tempRange = document.createRange();
+            //tempRange.createRange();
+            //tempRange.selectNode(currentNode);
+            //ranges.push(tempRange);
+        }
+
+        if(currentNode.firstChild != null){
+            currentNode = currentNode.firstChild;
+        }
+        else if (currentNode.nextSibling != null){
+            
+            currentNode = currentNode.nextSibling;
+        }
+        else if(currentNode.parentNode.nextSibling != null){
+            currentNode = currentNode.parentNode.nextSibling;
+        }
+        else if(currentNode.parentNode.parentNode.nextSibling != null){
+            currentNode = currentNode.parentNode.parentNode.nextSibling;
+        }
+        else{
+            console.warn("We are going to loop since we don't change the current node. WE NEED TO FIX THIS.");
+            //IF THIS STILL OCCURS, we have to fix it in a different way.
+            return true;
+        }
+    }
+    return false;
+
+}
+
 //function sleep(ms) {
    // return new Promise(resolve => setTimeout(resolve, ms));
   //}

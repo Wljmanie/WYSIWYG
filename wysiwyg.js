@@ -149,6 +149,7 @@ function isSelectionBackwards(sel){
         let range = document.createRange();
         range.setStart(sel.anchorNode, sel.anchorOffSet);
         range.setEnd(sel.focusNode, sel.focusOffset);
+        
         backwards = range.collapsed;
         range.detach();
     }
