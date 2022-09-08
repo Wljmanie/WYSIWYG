@@ -54,7 +54,23 @@
                 if everything is already bold, then it should give the unbold button.
                 if so, just add bold.
                 if not, split the remaining.
-        Can a ruler be selected?
+        Can a ruler be selected? I don't think I add rules for comments.
+
+    On empty text
+        When there are no tags and there is text or space or a character inserted.
+        Create a P tag and a SPAN tag for them.
+    
+    Backspace functionality
+        auto delete white spaces
+        auto delete tags when a node is gone.
+        move cursor to the right spot.
+    delete functionality
+        auto delete white spaces
+        auto delete tags when a node is gone.
+        move cursor to the right spot.
+    
+    Code block might need some markup for padding/margin.
+    
 
     MULTIPLESELECTION IN FIREFOX IS NOT SUPPORTED AT THIS MOMENT, IT WILL ONLY TAKE THE FIRST!
 */
@@ -172,6 +188,14 @@ function HandleEnter(e){
                                     console.log("We hebben onze P tag niet gevonden!");
                                 }
                             }
+                            else{
+                                //TODO FIX einde van de span met meerdere spans.
+                                //We hebben geen selectie, maar we zitten aan het einde van een span, maar we hebben nog spans achter ons.
+                                //Die moeten we meeneme, zodat het weer klopt.
+
+                                
+                                console.warn("we moeten dit nog implementeren.")
+                            }
                         }
                     }
                     else if(position > 0 && position < node.length){
@@ -222,7 +246,11 @@ function HandleEnter(e){
                                     range.insertNode(p);
                                     p.appendChild(span);
                                     span.appendChild(content);
-                                    span.className = node.parentElement.getAttributeNode("class").value;
+                                    //Dit kan null geven.
+                                    if(node.parentElement.getAttributeNode("class") != null){
+
+                                        span.className = node.parentElement.getAttributeNode("class").value;
+                                    }
 
                                     let finalSiblingNode = node.parentNode;
                                     let spansToMove = [];
@@ -291,7 +319,7 @@ function HandleEnter(e){
                         startingNode = selection.focusNode;
                         destinationNode = selection.anchorNode;
                         startingNodeOffset = selection.focusOffset;
-                        destinationNode = selection.anchorOffset;
+                        destinationNodeOffset = selection.anchorOffset;
                     }
                     //This might be redundant.
                     else{
@@ -299,8 +327,9 @@ function HandleEnter(e){
                         startingNode = selection.anchorNode;
                         destinationNode = selection.focusNode;
                         startingNodeOffset = selection.anchorOffset;
-                        destinationOffset = selection.focusOffset;
+                        destinationNodeOffset = selection.focusOffset;
                     }
+                    console.log("DestinationNode what is it?: " + destinationNode);
 
                     while(!currentNode.isSameNode(destinationNode)){
                         //console.log("Loop currentNode: " + currentNode);
@@ -342,6 +371,211 @@ function HandleEnter(e){
                     }
                     console.log("We hebben text nodes gevonden en wel: " + textNodes.length);
                     
+                    //We only have one node so handle it differently.
+                    if(startingNode == destinationNode){
+                        console.log("We only have one node.");
+
+                        if(textNodes[0].length == destinationNodeOffset && startingNodeOffset == 0){
+                            //We have the full node.
+                            console.log("Full node selected.");
+                            let parent = textNodes[0].parentNode;
+                            if(parent.nodeName == "SPAN"){
+                                if(parent.previousSibling == null && parent.nextSibling == null){
+                                    //We are the last span, so delete the p as well.
+                                    console.log("We are the last span.");
+                                    //we grab the one above p and delete the child.
+                                   
+                                    if(parent.parentNode.nodeName == "P"){
+                                        
+                                        //We need to create the P object.
+                                        if(parent.parentNode.nextSibling.nodeName != "P"){
+                                            //We have a next sibling put it in front.
+                                            //TODO CLEAN UP the .parent.parent stuff.
+                                            
+                                                range.setStartBefore(parent.parentNode.nextSibling);
+                                                range.setEndBefore(parent.parentNode.nextSibling);
+    
+    
+                                                p = document.createElement("P");
+                                                span = document.createElement("SPAN");
+                                                zwsp = document.createTextNode("\u200B");
+                                                range.insertNode(p);
+                                                p.appendChild(span);
+                                                span.appendChild(zwsp);
+                                                range.selectNode(zwsp);
+                                                selection.removeAllRanges();
+                                                selection.addRange(range);                            
+                                                range.detach();
+                                                console.log("Created the new P.");
+                                                parent.parentNode.parentNode.removeChild(parent.parentNode);
+                                            
+                                        }
+                                        else if(parent.parentNode.previousSibling.nodeName != "P"){
+                                            
+                                                range.setStartAfter(parent.parentNode.previousSibling);
+                                                range.setEndAfter(parent.parentNode.previousSibling);
+                                                p = document.createElement("P");
+                                                span = document.createElement("SPAN");
+                                                zwsp = document.createTextNode("\u200B");
+                                                range.insertNode(p);
+                                                p.appendChild(span);
+                                                span.appendChild(zwsp);
+                                                range.selectNode(zwsp);
+                                                selection.removeAllRanges();
+                                                selection.addRange(range);                            
+                                                range.detach();
+                                                console.log("Created the new P.");
+                                                parent.parentNode.parentNode.removeChild(parent.parentNode);
+                                            
+                                        }
+                                        else{
+                                                console.warn("This should never happen.")     
+                                        }
+                                        
+                                    }
+                                    else{
+                                        console.warn("We expected a P here.");
+                                        
+                                    }
+                                }
+                                else{
+                                    console.log("We still have other spans.");
+                                    //We need to see if there are spans behind us and grab those, to take them with us.
+                                    let siblingsToTakeWith = [];
+                                    let nextSibling = parent.nextSibling;
+                                    if(nextSibling == null){
+                                        console.log("We don't have more siblings.");
+                                            if(parent.parentNode.nodeName == "P"){
+                                                range.setStartAfter(parent.parentNode);
+                                                range.setEndAfter(parent.parentNode);
+                                                let p = document.createElement("P");
+                                                let span = document.createElement("SPAN");
+                                                let zwsp = document.createTextNode("\u200B");
+                                                range.insertNode(p);
+                                                p.appendChild(span);
+                                                span.appendChild(zwsp);
+                                                range.selectNode(zwsp);
+                                                selection.removeAllRanges();
+                                                selection.addRange(range);                            
+                                                range.detach();
+                                                console.log("Created the new P.");
+                                                parent.parentNode.parentNode.removeChild(parent.parentNode);
+
+                                            }
+                                            else{
+                                                console.warn("We expected a P tag here.");
+                                            }
+
+                                    }
+                                    else{
+                                        console.log("We do have more siblings.");
+
+                                        while(nextSibling != null && nextSibling.nodeName == "SPAN"){
+                                            siblingsToTakeWith.push(nextSibling);
+                                            nextSibling = nextSibling.nextSibling;
+                                        }
+                                        console.log("We take siblings amount with: " + siblingsToTakeWith.length);
+
+                                        range.setStartAfter(parent.parentNode);
+                                        range.setEndAfter(parent.parentNode);
+                                        p = document.createElement("P");
+                                        
+                                        
+                                        range.insertNode(p);
+
+                                        for(i=0; i < siblingsToTakeWith.length; i++){
+                                            p.appendChild(siblingsToTakeWith[i]);
+                                            
+                                        }
+                                        
+                                        
+                                        
+
+
+
+                                        
+                                        console.log("Created the new P.");
+                                        //if we don't have a previous sibling, create an empty p before us.
+                                        if(parent.previousSibling == null){
+                                            console.log("We don't have a previous sibling.");
+                                            
+
+                                            range.setStartBefore(parent.parentNode);
+                                            range.setEndBefore(parent.parentNode);
+                                            let p = document.createElement("P");
+                                            let span = document.createElement("SPAN");
+                                            let zwsp = document.createTextNode("\u200B");
+                                            range.insertNode(p);
+                                            p.appendChild(span);
+                                            span.appendChild(zwsp);
+                                    
+                                    
+                                            console.log("Created the new P.");
+                                            parent.parentNode.parentNode.removeChild(parent.parentNode);
+
+                                        }
+                                        else{
+                                            parent.parentNode.removeChild(parent);
+                                        }
+                                        //parent.parentNode.parentNode.removeChild(parent.parentNode);
+                                        range.setStartBefore(siblingsToTakeWith[0].firstChild);
+                                        range.setEndBefore(siblingsToTakeWith[0].firstChild);
+                                        selection.removeAllRanges();
+                                        selection.addRange(range);
+                                        range.detach();
+                                    }
+                                    
+
+
+                                    //parent.parentNode.removeChild(parent);
+
+
+                                }
+                            }
+                            else{
+                                console.warn("We were expecting a SPAN here.");
+                            }
+                           
+
+                        }
+                        else{
+                            //We have a partial node.
+                            console.log("Partial node selected.");
+                            //delete the partial stuff. check if there are more spans behind us. create p.
+                        }
+
+
+
+                    }
+
+
+
+                    for(i=0; i < textNodes.length; i++){
+                        if(textNodes[i] == startingNode){
+                            //We handle the starting node.
+                            console.log("HANDLE STARTING NODE");
+                            console.log("STARTOFFSET: " + startingNodeOffset);
+
+
+                            if(startingNodeOffset == 0){
+                                //We have the full node.
+                            }
+
+
+                        }
+                        else if(textNodes[i] == destinationNode){
+                            //We handle the ending node.
+                            console.log("HANDLE ENDING NODE");
+                        }
+                        else{
+                            //We handle the node in the middle.
+                            console.log("HANDLE MIDDLE NODE");
+
+                        }
+
+
+
+                    }
 
 
 
