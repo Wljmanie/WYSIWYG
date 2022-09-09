@@ -70,6 +70,8 @@
         move cursor to the right spot.
     
     Code block might need some markup for padding/margin.
+
+    Add default comment class to the spans.
     
 
     MULTIPLESELECTION IN FIREFOX IS NOT SUPPORTED AT THIS MOMENT, IT WILL ONLY TAKE THE FIRST!
@@ -189,12 +191,54 @@ function HandleEnter(e){
                                 }
                             }
                             else{
-                                //TODO FIX einde van de span met meerdere spans.
-                                //We hebben geen selectie, maar we zitten aan het einde van een span, maar we hebben nog spans achter ons.
-                                //Die moeten we meeneme, zodat het weer klopt.
+                                
 
                                 
-                                console.warn("we moeten dit nog implementeren.")
+                                
+                                if(node.parentNode.parentNode.nodeName == "P"){
+                                    //We need to grab our next sibling spans.
+                                    console.log("We hebben onze P tag.");
+                                    
+                                    
+                                    range.setStartAfter(node.parentNode.parentNode);
+                                    range.setEndAfter(node.parentNode.parentNode);
+                                    p = document.createElement("P");
+                                    
+                                    
+                                    range.insertNode(p);
+                                    
+                                    
+                                    
+                                   
+
+                                    let finalSiblingNode = node.parentNode;
+                                    let spansToMove = [];
+                                    while(finalSiblingNode.nextSibling != null){
+                                        
+                                        finalSiblingNode = finalSiblingNode.nextSibling;
+                                        spansToMove.push(finalSiblingNode);
+                                        console.log("Size:" + spansToMove.length);
+                                        console.log("nextSIb: " + finalSiblingNode);
+                                        //p.appendChild(finalSiblingNode);
+                                    }
+                                    for(i = 0; i < spansToMove.length; i++){
+                                        console.log("MoveChild");
+                                        let nodeMove = spansToMove[i];
+                                        p.appendChild(nodeMove);
+                                    }
+                                    //console.log("SPAN CHILD: " + span.firstChild.nodeName);
+                                    //console.log("heb ik dit?: " + spansToMove[0].firstChild);
+                                    range.setStartBefore(spansToMove[0].firstChild);
+                                    range.setEndBefore(spansToMove[0].firstChild);
+                                    selection.removeAllRanges();
+                                    selection.addRange(range);                            
+                                    range.detach();
+                                    console.log("Created the new P.");
+                                }
+                                else{
+                                    console.log("We hebben onze P tag niet gevonden!");
+                                }
+
                             }
                         }
                     }
@@ -218,7 +262,11 @@ function HandleEnter(e){
                                     range.insertNode(p);
                                     p.appendChild(span);
                                     span.appendChild(content);
-                                    span.className = node.parentElement.getAttributeNode("class").value;
+                                    if(node.parentElement.getAttributeNode("class") != null){
+
+                                        span.className = node.parentElement.getAttributeNode("class").value;
+                                    }
+                                    
                                     //span.setAttribute('class', node.parentNode.attributes);
                                     //console.log("SPAN CHILD: " + span.firstChild.nodeName);
                                     range.setStartBefore(span.firstChild);
@@ -388,10 +436,10 @@ function HandleEnter(e){
                                     if(parent.parentNode.nodeName == "P"){
                                         
                                         //We need to create the P object.
-                                        if(parent.parentNode.nextSibling.nodeName != "P"){
+                                        if(parent.parentNode.nextSibling.nodeName == "P"){
                                             //We have a next sibling put it in front.
                                             //TODO CLEAN UP the .parent.parent stuff.
-                                            
+                                                //this might get a null?
                                                 range.setStartBefore(parent.parentNode.nextSibling);
                                                 range.setEndBefore(parent.parentNode.nextSibling);
     
@@ -410,7 +458,7 @@ function HandleEnter(e){
                                                 parent.parentNode.parentNode.removeChild(parent.parentNode);
                                             
                                         }
-                                        else if(parent.parentNode.previousSibling.nodeName != "P"){
+                                        else if(parent.parentNode.previousSibling.nodeName == "P"){
                                             
                                                 range.setStartAfter(parent.parentNode.previousSibling);
                                                 range.setEndAfter(parent.parentNode.previousSibling);
@@ -429,7 +477,14 @@ function HandleEnter(e){
                                             
                                         }
                                         else{
-                                                console.warn("This should never happen.")     
+                                                console.warn("This should never happen.")  ;
+                                                //We are the last span and fully selected the node.
+                                                let zwsp = document.createTextNode("\u200B");
+                                                parent.replaceChild(zwsp,startingNode);
+                                                range.selectNode(zwsp);
+                                                selection.removeAllRanges();
+                                                selection.addRange(range);                            
+                                                range.detach();
                                         }
                                         
                                     }
@@ -459,7 +514,7 @@ function HandleEnter(e){
                                                 selection.addRange(range);                            
                                                 range.detach();
                                                 console.log("Created the new P.");
-                                                parent.parentNode.parentNode.removeChild(parent.parentNode);
+                                                parent.parentNode.removeChild(parent);
 
                                             }
                                             else{
@@ -542,6 +597,153 @@ function HandleEnter(e){
                             //We have a partial node.
                             console.log("Partial node selected.");
                             //delete the partial stuff. check if there are more spans behind us. create p.
+                            range.extractContents();
+                            //let content = range.extractContents();
+                            //console.log("Content: " + content);
+                            //we have it from the start
+                            if(startingNodeOffset == 0){
+                                console.log("Partial from the start.");
+                                //check if we are the very first one.
+                                //console.log("Wat is onze parent hier dan?: " + startingNode.parent);
+                                if(startingNode.parentNode.nodeName == "SPAN"){
+                                    if(startingNode.parentNode.previousSibling == null){
+                                        console.log("We are the first span.");
+                                        if(startingNode.parentNode.parentNode.nodeName == "P"){
+                                            let parent = startingNode.parentNode.parentNode;
+                                            range.setStartBefore(parent);
+                                            range.setEndBefore(parent);
+                                            let p = document.createElement("P");
+                                            let span = document.createElement("SPAN");
+                                            let zwsp = document.createTextNode("\u200B");
+                                            
+                                            //if(startingNode.parentElement.getAttributeNode("class") != null){
+
+                                              //  span.className = startingNode.parentElement.getAttributeNode("class").value;
+                                            //}
+                                            range.insertNode(p);
+                                            p.appendChild(span);
+                                            span.appendChild(zwsp);
+
+                                            range.setStartBefore(startingNode);
+                                            range.setEndBefore(startingNode);
+                                            selection.removeAllRanges();
+                                            selection.addRange(range);
+                                            range.detach();
+
+
+                                        }
+                                        else{
+                                            console.warn("We expected a P tag here.");
+                                        }
+
+
+
+                                    }
+                                    else{
+                                        console.log("We are not the first span.");
+                                        if(startingNode.parentNode.nextSibling == null){
+                                            console.log("We are the last span.");
+                                            if(startingNode.parentNode.parentNode.nodeName == "P"){
+                                                let parent = startingNode.parentNode.parentNode;
+                                                range.setStartAfter(parent);
+                                                range.setEndAfter(parent);
+                                                let p = document.createElement("P");
+                                                
+                                                
+                                                
+                                                //if(startingNode.parentElement.getAttributeNode("class") != null){
+    
+                                                  //  span.className = startingNode.parentElement.getAttributeNode("class").value;
+                                                //}
+                                                range.insertNode(p);
+
+                                                p.appendChild(startingNode.parentNode);
+                                                
+    
+                                                range.setStartBefore(startingNode);
+                                                range.setEndBefore(startingNode);
+                                                selection.removeAllRanges();
+                                                selection.addRange(range);
+                                                range.detach();
+    
+    
+                                            }
+                                            else{
+                                                console.warn("We expected a P tag here.");
+                                            }
+                                        }
+                                        else{
+                                            //We are somewhere in the middle.
+                                            //and we have to take multiple ones with us.
+                                            let siblingsToTakeWith = [];
+                                            let nextSibling = startingNode.parentNode.nextSibling;
+
+                                            while(nextSibling != null && nextSibling.nodeName == "SPAN"){
+                                                siblingsToTakeWith.push(nextSibling);
+                                                nextSibling = nextSibling.nextSibling;
+                                            }
+                                            console.log("We take siblings amount with: " + siblingsToTakeWith.length);
+
+
+                                            if(startingNode.parentNode.parentNode.nodeName == "P"){
+                                                range.setStartAfter(startingNode.parentNode.parentNode);
+                                                range.setEndAfter(startingNode.parentNode.parentNode);
+
+                                            }
+                                            else{
+                                                console.warn("We are expecting a P element here.");
+                                            }
+                                            let p = document.createElement("P");
+                                        
+                                        
+                                            range.insertNode(p);
+                                            p.appendChild(startingNode.parentNode);
+
+                                            for(i=0; i < siblingsToTakeWith.length; i++){
+                                                p.appendChild(siblingsToTakeWith[i]);
+                                            
+                                            }
+
+                                            range.setStartBefore(startingNode);
+                                            range.setEndBefore(startingNode);
+                                            selection.removeAllRanges();
+                                            selection.addRange(range);
+                                            range.detach();
+
+                                        }
+                                    }
+                                }
+                                else{
+                                    console.warn("We were expecting a span.");
+                                }
+                                
+                            }
+                            else if (textNodes[0].length == destinationNodeOffset ){
+                                console.log("Partial till the end.");
+
+
+
+                                
+                                //check if we are the last one.
+                                    //create a new empty p behind.
+                                //otherwise take the others with.
+                            }
+                            else{
+                                console.log("Partial in the middle");
+                                //take everything behind us with us in a new p.
+
+
+
+                            }
+
+
+                            
+
+
+
+
+
+
                         }
 
 
