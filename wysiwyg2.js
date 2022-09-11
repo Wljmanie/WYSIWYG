@@ -79,9 +79,6 @@
 
 import { Util } from './utils.js';
 
-//const Util = new Util();
-
-Util.Test();
 //Makes sure they don't run an ancient browser.
 const isSupported = typeof window.getSelection !== "undefined";
 if(!isSupported){
@@ -89,6 +86,7 @@ if(!isSupported){
 } 
 //Grab the variable we need from the DOM.
 const visualView = document.getElementById("visualview");
+//Util.SetDiv(visualView);
 const htmlView = document.getElementById("htmlview");
 const boldButton = document.getElementById("boldbutton");
 
@@ -101,12 +99,12 @@ visualView.addEventListener('keydown', function(e){
 visualView.addEventListener("keyup", function(e){
     htmlView.innerText = visualView.innerHTML;
 });
-document.addEventListener('selectionchange', () => {
-    let selection = window.getSelection();
-    //console.log("BADSELECTION?: " + isBadSelection(selection));
-    isBadSelection(selection);
-    console.log("We finished loop;");
-  });
+//document.addEventListener('selectionchange', () => {
+//    let selection = window.getSelection();
+//    //console.log("BADSELECTION?: " + isBadSelection(selection));
+//    isBadSelection(selection);
+ //   console.log("We finished loop;");
+//  });
 //END OF TEMP SHIT
 
 function HandleEnter(e){
@@ -126,133 +124,40 @@ function HandleEnter(e){
             console.log("ENTER");
             let selection = window.getSelection();
             let range = selection.getRangeAt(0);
-            //We moeten nog even kijken of er meerdere spans in de P tag zitten.
-            //We should always be in a text node, so lets check for it.
             let node = selection.anchorNode;
-            console.log(node.nodeName);
+            //We should always be in a text node, so lets check for it.
             if(node.nodeName == "#text"){
-                console.log("We zitten in een text node.");
+                //We got nothing selected.
                 if(range.collapsed){
-                    console.log("Niks geselecteerd.");
-                    //Check waar we in de text node zitten om te zien wat we doen.
-                    let position = range.startOffset;
-                    console.log("Position offset: " + position);
-                    console.log("LENGTH NODE: " + node.length);
-                    if(position == 0){
-                        console.log("We zitten helemaal aan het begin van de text node.");
-                        if(node.parentNode.nodeName == "SPAN"){
-                            console.log("Our parent is a span.");
-                            console.log("ervoor?" + node.parentNode.previousSibling);
-                            if(node.parentNode.previousSibling == null){
-                                if(node.parentNode.parentNode.nodeName == "P"){                             
-                                    console.log("We hebben onze P tag.");
-                                    range.setStartBefore(node.parentNode.parentNode);
-                                    range.setEndBefore(node.parentNode.parentNode);
-                                    p = document.createElement("P");
-                                    span = document.createElement("SPAN");
-                                    zwsp = document.createTextNode("\u200B");
-                                    range.insertNode(p);
-                                    p.appendChild(span);
-                                    span.appendChild(zwsp);
-                                    range.selectNode(zwsp);
-                                    selection.removeAllRanges();
-                                    selection.addRange(range);
-                                    range.detach();
-                                    console.log("Created the new P.");
-                                }
-                                else{
-                                    console.log("We hebben onze P tag niet gevonden!");
-                                }
-                            }
-                        }
-                        //node.parentNode.previousSibling
+                    //We check if we are at the beginning of the Text Node.
+                    if(range.startOffset == 0){
+                        //We check if we are the beginning of the Paragraph.
+                        if(node.parentNode.previousSibling == null){                                    
+                            Util.InsertBeforeP(node.parentNode.parentNode);
+                            range.detach();
+                            return;   
+                        }   
                     }
-                    else if(position == node.length){
-                        console.log("We zitten helemaal aan het eind van de text node.");
-                        if(node.parentNode.nodeName == "SPAN"){
-                            console.log("Our parent is a span.");
-                            console.log("erna?" + node.parentNode.nextSibling);
-                            if(node.parentNode.nextSibling == null){
-                                //We create a p and a span tag in it, then put the cursor focus in the span.
-                                //We create it after our current P
-                                if(node.parentNode.parentNode.nodeName == "P"){
-                                    console.log("We hebben onze P tag.");
-                                    range.setStartAfter(node.parentNode.parentNode);
-                                    range.setEndAfter(node.parentNode.parentNode);
-                                    p = document.createElement("P");
-                                    span = document.createElement("SPAN");
-                                    zwsp = document.createTextNode("\u200B");
-                                    //range.insertNode(p);
-                                    //p.appendChild(span);
-                                    //span.appendChild(zwsp);
-                                    console.log("WE TESTEN DE JUISTE SHIT!!!");
-                                    p.appendChild(span);
-                                    span.appendChild(zwsp);
-                                    range.insertNode(p);
-
-                                    range.selectNode(zwsp);
-                                    selection.removeAllRanges();
-                                    selection.addRange(range);                            
-                                    range.detach();
-                                    console.log("Created the new P.");
-                                }
-                                else{
-                                    console.log("We hebben onze P tag niet gevonden!");
-                                }
-                            }
-                            else{
-                                
-
-                                
-                                
-                                if(node.parentNode.parentNode.nodeName == "P"){
-                                    //We need to grab our next sibling spans.
-                                    console.log("We hebben onze P tag.");
-                                    
-                                    
-                                    range.setStartAfter(node.parentNode.parentNode);
-                                    range.setEndAfter(node.parentNode.parentNode);
-                                    p = document.createElement("P");
-                                    
-                                    
-                                    range.insertNode(p);
-                                    
-                                    
-                                    
-                                   
-
-                                    let finalSiblingNode = node.parentNode;
-                                    let spansToMove = [];
-                                    while(finalSiblingNode.nextSibling != null){
-                                        
-                                        finalSiblingNode = finalSiblingNode.nextSibling;
-                                        spansToMove.push(finalSiblingNode);
-                                        console.log("Size:" + spansToMove.length);
-                                        console.log("nextSIb: " + finalSiblingNode);
-                                        //p.appendChild(finalSiblingNode);
-                                    }
-                                    for(i = 0; i < spansToMove.length; i++){
-                                        console.log("MoveChild");
-                                        let nodeMove = spansToMove[i];
-                                        p.appendChild(nodeMove);
-                                    }
-                                    //console.log("SPAN CHILD: " + span.firstChild.nodeName);
-                                    //console.log("heb ik dit?: " + spansToMove[0].firstChild);
-                                    range.setStartBefore(spansToMove[0].firstChild);
-                                    range.setEndBefore(spansToMove[0].firstChild);
-                                    selection.removeAllRanges();
-                                    selection.addRange(range);                            
-                                    range.detach();
-                                    console.log("Created the new P.");
-                                }
-                                else{
-                                    console.log("We hebben onze P tag niet gevonden!");
-                                }
-
-                            }
+                    //We check if we are at the very end of the Text Node.
+                    else if(range.startOffset == node.length){
+                        //We check if we are the very end of the Paragraph.
+                        if(node.parentNode.nextSibling == null){                    
+                            range.selectNode(Util.InsertAfterP(node.parentNode.parentNode.nextSibling));
+                            selection.removeAllRanges();
+                            selection.addRange(range);                            
+                            range.detach();
+                            return;          
+                        }
+                        else{ 
+                            let cursorNode = Util.InsertAfterP(node.parentNode.parentNode.nextSibling, node, true);
+                            range.setStart(cursorNode, 0);
+                            range.setEnd(cursorNode, 0);                       
+                            selection.removeAllRanges();
+                            selection.addRange(range);                            
+                            range.detach();
                         }
                     }
-                    else if(position > 0 && position < node.length){
+                    else{
                         console.log("We zitten ergens in het midden van de text node.");               
                         if(node.parentNode.nodeName == "SPAN"){
                             console.log("Our parent is a span.");
@@ -298,7 +203,7 @@ function HandleEnter(e){
                                     let content = range.extractContents();
                                     range.setStartAfter(node.parentNode.parentNode);
                                     range.setEndAfter(node.parentNode.parentNode);
-                                    p = document.createElement("P");
+                                    let p = document.createElement("P");
                                     span = document.createElement("SPAN");
                                     contentToTake = document.createTextNode(content.tostring);
                                     range.insertNode(p);
@@ -339,9 +244,7 @@ function HandleEnter(e){
                             }
                         }
                     }
-                    else{
-                        console.log("Er is iets mis gegaan.");
-                    }
+                    
                 }
                 else{
                     console.log("We hebben wat geselecteerd.");
@@ -1101,9 +1004,9 @@ function HandleEnter(e){
                                         console.log("We hebben onze P tag.");
                                         range.setStartAfter(node.parentNode.parentNode);
                                         range.setEndAfter(node.parentNode.parentNode);
-                                        p = document.createElement("P");
-                                        span = document.createElement("SPAN");
-                                        zwsp = document.createTextNode("\u200B");
+                                        let p = document.createElement("P");
+                                        let span = document.createElement("SPAN");
+                                        let zwsp = document.createTextNode("\u200B");
                                         range.insertNode(p);
                                         p.appendChild(span);
                                         span.appendChild(zwsp);
@@ -1130,39 +1033,7 @@ function HandleEnter(e){
 
                 console.log("NODENAME: " + node.nodeName);
             }
-/*
-            
-        textNodeParent = document.getSelection().anchorNode.parentNode;
-        myCurrentNode = document.getSelection().anchorNode;
-        //console.log("NodeParent: " + textNodeParent);
-        //console.log("Current Node: " + myCurrentNode);  
-        if(textNodeParent.nodeName == "P"){
-            range.setStartAfter(textNodeParent);
-            range.setEndAfter(textNodeParent);
-        }
-        else if(myCurrentNode.nodeName == "P"){
-            range.setStartAfter(myCurrentNode);
-            range.setEndAfter(myCurrentNode);
-        }
-        //TODO NEED TO CHECK TILL I GET OUT OF ALL THE SPANS.
-        else if(textNodeParent.nodeName == "SPAN"){
-            let tempNode = document.getSelection().anchorNode.parentNode.parentNode;
-            if( tempNode.nodeName == "P"){
-                range.setStartAfter(tempNode);
-                range.setEndAfter(tempNode);
-            }
-            else{
-                console.log("Something went wrong.");
-            }
-        }
 
-        range.deleteContents();
-        range.insertNode(p);
-        let zwsp = document.createTextNode("\u200B");    
-        p.appendChild(zwsp);
-        range.selectNode(zwsp);
-        sel.removeAllRanges();
-        sel.addRange(range);*/
         }
     }
 }
