@@ -262,9 +262,9 @@ function HandleEnter(e){
                                     range.insertNode(p);
                                     p.appendChild(span);
                                     span.appendChild(content);
-                                    if(node.parentElement.getAttributeNode("class") != null){
+                                    if(node.parentNode.getAttributeNode("class") != null){
 
-                                        span.className = node.parentElement.getAttributeNode("class").value;
+                                        span.className = node.parentNode.getAttributeNode("class").value;
                                     }
                                     
                                     //span.setAttribute('class', node.parentNode.attributes);
@@ -295,9 +295,9 @@ function HandleEnter(e){
                                     p.appendChild(span);
                                     span.appendChild(content);
                                     //Dit kan null geven.
-                                    if(node.parentElement.getAttributeNode("class") != null){
+                                    if(node.parentNode.getAttributeNode("class") != null){
 
-                                        span.className = node.parentElement.getAttributeNode("class").value;
+                                        span.className = node.parentNode.getAttributeNode("class").value;
                                     }
 
                                     let finalSiblingNode = node.parentNode;
@@ -844,7 +844,7 @@ function HandleEnter(e){
                                                 let p = document.createElement("P");
                                                 let span = document.createElement("SPAN");
                                                 if(startingNode.parentNode.getAttributeNode("class") != null){
-                                                    span.className = startingNode.parentElement.getAttributeNode("class").value;
+                                                    span.className = startingNode.parentNode.getAttributeNode("class").value;
                                                 }
 
                                                 let text = document.createTextNode(content.textContent);
@@ -904,7 +904,7 @@ function HandleEnter(e){
                                             console.log(content.textContent);
                                             let span = document.createElement("SPAN");
                                             if(startingNode.parentNode.getAttributeNode("class") != null){
-                                                span.className = startingNode.parentElement.getAttributeNode("class").value;
+                                                span.className = startingNode.parentNode.getAttributeNode("class").value;
                                             }
 
                                             let text = document.createTextNode(content.textContent);
@@ -949,6 +949,64 @@ function HandleEnter(e){
 
                     }
                     else{
+                        //Check if the node is the last one in the p.
+                        //if fully selected create empty p.
+                        //otherwise take the rest of the p with.
+                        let finalRange = document.createRange();
+
+                        if(destinationNode.nextSibling == null){
+                            if(destinationNodeOffset == destinationNode.textContent.length){
+                                let p = document.createElement("P");
+                                let span = document.createElement("SPAN");
+                                let zwsp = document.createTextNode("\u200B");
+    
+                                finalRange.setStartAfter(destinationNode.parentNode.parentNode);
+                                finalRange.setEndAfter(destinationNode.parentNode.parentNode);
+                                finalRange.insertNode(p);
+                                p.appendChild(span);
+                                span.appendChild(zwsp);
+                                finalRange.selectNode(zwsp);
+                            }
+                            else{
+                                let p = document.createElement("P");
+                                let span = document.createElement("Span");
+                                if(destinationNode.parentNode.getAttributeNode("class") != null){
+                                    span.className = destinationNode.parentNode.getAttributeNode("class").value;
+                                }
+                                //we still need to take our siblings.
+
+                                let siblingsToTakeWith = [];
+                                            let nextSibling = destinationNode.parentNode.nextSibling;
+
+                                            while(nextSibling != null && nextSibling.nodeName == "SPAN"){
+                                                siblingsToTakeWith.push(nextSibling);
+                                                nextSibling = nextSibling.nextSibling;
+                                            }
+                                            console.log("We take siblings amount with: " + siblingsToTakeWith.length);
+
+
+                                finalRange.setStartAfter(destinationNode.parentNode.parentNode);
+                                finalRange.setEndAfter(destinationNode.parentNode.parentNode);
+                                finalRange.insertNode(p);
+                                p.appendChild(span);
+                                finalRange.setStart(destinationNode, destinationNodeOffset);
+                                finalRange.setEnd(destinationNode, destinationNode.textContent.length);
+                                let content = finalRange.extractContents();
+                                let text = document.createTextNode(content.textContent);
+                                span.appendChild(text);
+
+                                for(i=0; i < siblingsToTakeWith.length; i++){
+                                                p.appendChild(siblingsToTakeWith[i]);
+                                            
+                                            }
+
+                                finalRange.setStart(text, 0);
+                                finalRange.setEnd(text, 0);
+
+                            }
+                        }
+                       
+
                         for(i=0; i < textNodes.length; i++){
                         if(textNodes[i] == startingNode){
                             //We handle the starting node.
@@ -960,23 +1018,46 @@ function HandleEnter(e){
 
                             if(startingNodeOffset == 0){
                                 //We have the full node.
+                                //just delete
+
+                                if(startingNode.parentNode.previousSibling == null && startingNode.parentNode.nextSibling == null){
+                                    startingNode.parentNode.parentNode.parentNode.removeChild(startingNode.parentNode.parentNode);
+                                }
+                                else{
+                                    startingNode.parentNode.parentNode.removeChild(startingNode.parentNode);
+                                }
+
+                            }
+                            else{
+                                range.setStart(startingNode, startingNodeOffset);
+                                range.setEnd(startingNode, startingNode.textContent.length);
+                                range.extractContents();
                             }
 
-
                         }
-                        else if(textNodes[i] == destinationNode){
-                            //We handle the ending node.
-                            console.log("HANDLE ENDING NODE");
-                        }
+                        
                         else{
                             //We handle the node in the middle.
                             console.log("HANDLE MIDDLE NODE");
+                            if(textNodes[i].parentNode.previousSibling == null && textNodes[i].parentNode.nextSibling == null){
+                                textNodes[i].parentNode.parentNode.parentNode.removeChild(textNodes[i].parentNode.parentNode);
+                            }
+                            else{
+                                textNodes[i].parentNode.parentNode.removeChild(textNodes[i].parentNode);
+                            }
 
                         }
 
 
 
                         }
+
+                        selection.removeAllRanges();
+                        selection.addRange(finalRange);
+                        range.detach();
+                        finalRange.detach();
+
+
                     }
 
 
