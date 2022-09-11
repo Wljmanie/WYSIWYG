@@ -2,29 +2,31 @@ export class Util{
      
     static visualView = document.getElementById("visualview");
 
-    static CreateEmptyP(){
+    static CreateP(content = null){
         let p = document.createElement("P");
         let span = document.createElement("SPAN");
         span.classList.add("comment");
-        let zwsp = document.createTextNode("\u200B");
+        if(content == null){
+            let zwsp = document.createTextNode("\u200B");
+            span.appendChild(zwsp);
+        }
+        else{
+            let contentNode = document.createTextNode(content.textContent);
+            span.appendChild(contentNode);
+        }
         p.appendChild(span);
-        span.appendChild(zwsp);
         return p;
     }
 
     static InsertBeforeP(target){
-        this.visualView.insertBefore(this.CreateEmptyP(),target);
+        this.visualView.insertBefore(this.CreateP(),target);
     }
 
-    static InsertAfterP(target, textNode = null, moveNodes = false){
-        let p = this.CreateEmptyP();
+    static InsertAfterP(target, textNode = null){
+        let p = this.CreateP();
         this.visualView.insertBefore(p,target);
 
-        if(!moveNodes){          
-            //We return the text node of the empty white space.
-            return p.firstChild.firstChild;
-        }
-        else{
+        if(textNode != null){          
             let nextSibling = textNode.parentNode.nextSibling;
             let nodesToMove = [];
             while(nextSibling != null && nextSibling.nodeName == "SPAN"){
@@ -34,8 +36,32 @@ export class Util{
             for(let i=0; i < nodesToMove.length; i++){
                 p.appendChild(nodesToMove[i]);
             }
-            //We return the first text node of the newly formed paragraph.
-            return p.firstChild.firstChild;
+        }  
+        //We return the first text node of the newly formed paragraph.
+        return p.firstChild.firstChild;
+    }
+
+    static InsertAfterPWithContent(target, node, content, moveNodes = false){
+        let p = this.CreateP(content);
+        this.visualView.insertBefore(p, target);
+        
+        node.parentNode.classList.forEach(function (c){
+            if(!p.firstChild.classList.contains(c)){
+                p.firstChild.classList.add(c);
+            }
+        });
+        
+        if(!moveNodes){
+
+
+
+
+            
         }
+        else{
+
+        }
+
+        return p.firstChild.firstChild;
     }
 }

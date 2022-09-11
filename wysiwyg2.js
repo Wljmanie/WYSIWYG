@@ -149,7 +149,7 @@ function HandleEnter(e){
                             return;          
                         }
                         else{ 
-                            let cursorNode = Util.InsertAfterP(node.parentNode.parentNode.nextSibling, node, true);
+                            let cursorNode = Util.InsertAfterP(node.parentNode.parentNode.nextSibling, node);
                             range.setStart(cursorNode, 0);
                             range.setEnd(cursorNode, 0);                       
                             selection.removeAllRanges();
@@ -157,44 +157,19 @@ function HandleEnter(e){
                             range.detach();
                         }
                     }
-                    else{
-                        console.log("We zitten ergens in het midden van de text node.");               
-                        if(node.parentNode.nodeName == "SPAN"){
-                            console.log("Our parent is a span.");
-                            //console.log("erna?" + node.parentNode.nextSibling);
-                            if(node.parentNode.nextSibling == null){
-                                //We create a p and a span tag in it, then put the cursor focus in the span.
-                                //We create it after our current P
-                                if(node.parentNode.parentNode.nodeName == "P"){
-                                    console.log("We hebben onze P tag.");
+                    //We are in the middle of a text node.
+                    else{           
+                            //We don't have any nodes to move to the new Paragraph.
+                            if(node.parentNode.nextSibling == null){                         
                                     range.setEnd(node, node.length);
-                                    let content = range.extractContents();
-                                    range.setStartAfter(node.parentNode.parentNode);
-                                    range.setEndAfter(node.parentNode.parentNode);
-                                    p = document.createElement("P");
-                                    span = document.createElement("SPAN");                            
-                                    contentToTake = document.createTextNode(content.tostring);
-                                    range.insertNode(p);
-                                    p.appendChild(span);
-                                    span.appendChild(content);
-                                    if(node.parentNode.getAttributeNode("class") != null){
-
-                                        span.className = node.parentNode.getAttributeNode("class").value;
-                                    }
-                                    
-                                    //span.setAttribute('class', node.parentNode.attributes);
-                                    //console.log("SPAN CHILD: " + span.firstChild.nodeName);
-                                    range.setStartBefore(span.firstChild);
-                                    range.setEndBefore(span.firstChild);
+                                    let cursorNode = Util.InsertAfterPWithContent(node.parentNode.parentNode.nextSibling, node, range.extractContents());
+                                    range.setStart(cursorNode, 0);
+                                    range.setEnd(cursorNode, 0);                       
                                     selection.removeAllRanges();
                                     selection.addRange(range);                            
-                                    range.detach();
-                                    console.log("Created the new P.");
-                                }
-                                else{
-                                    console.log("We hebben onze P tag niet gevonden!");
-                                }
+                                    range.detach();                             
                             }
+                            //We have nodes to move to the new Paragraph.
                             else{
                                 if(node.parentNode.parentNode.nodeName == "P"){
                                     //We need to grab our next sibling spans.
@@ -242,7 +217,7 @@ function HandleEnter(e){
                                     console.log("We hebben onze P tag niet gevonden!");
                                 }
                             }
-                        }
+                        
                     }
                     
                 }
