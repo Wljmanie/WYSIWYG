@@ -77,6 +77,11 @@
     MULTIPLESELECTION IN FIREFOX IS NOT SUPPORTED AT THIS MOMENT, IT WILL ONLY TAKE THE FIRST!
 */
 
+import { Util } from './utils.js';
+
+//const Util = new Util();
+
+Util.Test();
 //Makes sure they don't run an ancient browser.
 const isSupported = typeof window.getSelection !== "undefined";
 if(!isSupported){
@@ -177,9 +182,14 @@ function HandleEnter(e){
                                     p = document.createElement("P");
                                     span = document.createElement("SPAN");
                                     zwsp = document.createTextNode("\u200B");
-                                    range.insertNode(p);
+                                    //range.insertNode(p);
+                                    //p.appendChild(span);
+                                    //span.appendChild(zwsp);
+                                    console.log("WE TESTEN DE JUISTE SHIT!!!");
                                     p.appendChild(span);
                                     span.appendChild(zwsp);
+                                    range.insertNode(p);
+
                                     range.selectNode(zwsp);
                                     selection.removeAllRanges();
                                     selection.addRange(range);                            
