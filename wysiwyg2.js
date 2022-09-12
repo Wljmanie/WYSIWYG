@@ -160,89 +160,35 @@ function HandleEnter(e){
                     //We are in the middle of a text node.
                     else{           
                             //We don't have any nodes to move to the new Paragraph.
-                            if(node.parentNode.nextSibling == null){                         
-                                    range.setEnd(node, node.length);
-                                    let cursorNode = Util.InsertAfterPWithContent(node.parentNode.parentNode.nextSibling, node, range.extractContents());
-                                    range.setStart(cursorNode, 0);
-                                    range.setEnd(cursorNode, 0);                       
-                                    selection.removeAllRanges();
-                                    selection.addRange(range);                            
-                                    range.detach();                             
-                            }
+                        if(node.parentNode.nextSibling == null){                         
+                            range.setEnd(node, node.length);
+                            let cursorNode = Util.InsertAfterPWithContent(node.parentNode.parentNode.nextSibling, node, range.extractContents());
+                            range.setStart(cursorNode, 0);
+                            range.setEnd(cursorNode, 0);                       
+                            selection.removeAllRanges();
+                            selection.addRange(range);                            
+                            range.detach();                             
+                        }
                             //We have nodes to move to the new Paragraph.
-                            else{
-                                if(node.parentNode.parentNode.nodeName == "P"){
-                                    //We need to grab our next sibling spans.
-                                    console.log("We hebben onze P tag.");
-                                    range.setEnd(node, node.length);
-                                    let content = range.extractContents();
-                                    range.setStartAfter(node.parentNode.parentNode);
-                                    range.setEndAfter(node.parentNode.parentNode);
-                                    let p = document.createElement("P");
-                                    span = document.createElement("SPAN");
-                                    contentToTake = document.createTextNode(content.tostring);
-                                    range.insertNode(p);
-                                    p.appendChild(span);
-                                    span.appendChild(content);
-                                    //Dit kan null geven.
-                                    if(node.parentNode.getAttributeNode("class") != null){
-
-                                        span.className = node.parentNode.getAttributeNode("class").value;
-                                    }
-
-                                    let finalSiblingNode = node.parentNode;
-                                    let spansToMove = [];
-                                    while(finalSiblingNode.nextSibling != null){
-                                        
-                                        finalSiblingNode = finalSiblingNode.nextSibling;
-                                        spansToMove.push(finalSiblingNode);
-                                        console.log("Size:" + spansToMove.length);
-                                        console.log("nextSIb: " + finalSiblingNode);
-                                        //p.appendChild(finalSiblingNode);
-                                    }
-                                    for(i = 0; i < spansToMove.length; i++){
-                                        console.log("MoveChild");
-                                        let nodeMove = spansToMove[i];
-                                        p.appendChild(nodeMove);
-                                    }
-                                    //console.log("SPAN CHILD: " + span.firstChild.nodeName);
-                                    range.setStartBefore(span.firstChild);
-                                    range.setEndBefore(span.firstChild);
-                                    selection.removeAllRanges();
-                                    selection.addRange(range);                            
-                                    range.detach();
-                                    console.log("Created the new P.");
-                                }
-                                else{
-                                    console.log("We hebben onze P tag niet gevonden!");
-                                }
-                            }
-                        
-                    }
-                    
+                        else{                              
+                            range.setEnd(node, node.length);
+                            let cursorNode = Util.InsertAfterPWithContent(node.parentNode.parentNode.nextSibling, node, range.extractContents(), true);                             
+                            range.setStartBefore(cursorNode, 0);
+                            range.setEndBefore(cursorNode, 0);
+                            selection.removeAllRanges();
+                            selection.addRange(range);                            
+                            range.detach(); 
+                        }       
+                    }            
                 }
+                //We got something selected.
                 else{
-                    console.log("We hebben wat geselecteerd.");
-                    //Delete wat we hebben geselecteerd. We moeten uitkijken wat we precies geselecteerd hebben.
-                    //Wat hebben we geselecteerd?
-                        //We hebben een gedeeltelijke node.
-                        //We hebben een volledige node.
-                        //We hebben twee gedeeltelijke nodes
-                        //we hebben een gedeeltelijke node en een volledige node.
-                        //we hebben een gedeeltelijke node en meerdere volledige nodes.
-                        //we hebben meerdere gedeeltelijke nodes.
-
-                        //Ik denk dat we alle nodes moeten pakken.
-                        //Dan loopen we door elke node.
-                            //We handelen een volledige node.
-                                //als het de laatste node was. Delete de P ook.
-                            //We handelen een gedeelte node.
-                    
-                    //We select something bad. This should never trigger.
+                    //We select something bad.
                     if(isBadSelection(selection)){
                         alert("Your selection is containing things outside the input box.");
                         return; 
                     }
+                    
                     let textNodes = [];
                     let currentNode;
                     let startingNode;
@@ -376,8 +322,7 @@ function HandleEnter(e){
                                                 selection.removeAllRanges();
                                                 selection.addRange(range);                            
                                                 range.detach();
-                                        }
-                                        
+                                        }                         
                                     }
                                     else{
                                         console.warn("We expected a P here.");
@@ -432,13 +377,7 @@ function HandleEnter(e){
                                         for(i=0; i < siblingsToTakeWith.length; i++){
                                             p.appendChild(siblingsToTakeWith[i]);
                                             
-                                        }
-                                        
-                                        
-                                        
-
-
-
+                                        }                              
                                         
                                         console.log("Created the new P.");
                                         //if we don't have a previous sibling, create an empty p before us.
@@ -471,8 +410,6 @@ function HandleEnter(e){
                                         range.detach();
                                     }
                                     
-
-
                                     //parent.parentNode.removeChild(parent);
 
 
@@ -697,9 +634,7 @@ function HandleEnter(e){
                                 }
                                 else{
                                     console.warn("We were expecting a span.");
-                                }
-
-                                
+                                }                             
                                 //check if we are the last one.
                                     //create a new empty p behind.
                                 //otherwise take the others with.
@@ -710,12 +645,7 @@ function HandleEnter(e){
                                 
                                 //check if we are the very first one.
                                 //console.log("Wat is onze parent hier dan?: " + startingNode.parent);
-                                if(startingNode.parentNode.nodeName == "SPAN"){
-                                    
-
-
-
-                                    
+                                if(startingNode.parentNode.nodeName == "SPAN"){                             
                                         
                                         if(startingNode.parentNode.nextSibling == null){
                                             console.log("We are the last span.");
@@ -735,9 +665,7 @@ function HandleEnter(e){
                                                     span.className = startingNode.parentNode.getAttributeNode("class").value;
                                                 }
 
-                                                let text = document.createTextNode(content.textContent);
-                                                
-                                                
+                                                let text = document.createTextNode(content.textContent);                                                             
                                                 //if(startingNode.parentElement.getAttributeNode("class") != null){
     
                                                   //  span.className = startingNode.parentElement.getAttributeNode("class").value;
@@ -812,29 +740,13 @@ function HandleEnter(e){
                                             selection.addRange(range);
                                             range.detach();
 
-                                        }
-                                    
+                                        }                                
                                 }
                                 else{
                                     console.warn("We were expecting a span.");
                                 }
-
-
-
                             }
-
-
-                            
-
-
-
-
-
-
                         }
-
-
-
                     }
                     else{
                         //Check if the node is the last one in the p.
@@ -894,16 +806,12 @@ function HandleEnter(e){
                             }
                         }
                        
-
                         for(i=0; i < textNodes.length; i++){
                         if(textNodes[i] == startingNode){
                             //We handle the starting node.
                             console.log("HANDLE STARTING NODE");
                             console.log("STARTOFFSET: " + startingNodeOffset);
                             console.log("DESTOFFSET: " + destinationNodeOffset);
-
-
-
                             if(startingNodeOffset == 0){
                                 //We have the full node.
                                 //just delete
@@ -936,24 +844,12 @@ function HandleEnter(e){
 
                         }
 
-
-
                         }
-
                         selection.removeAllRanges();
                         selection.addRange(finalRange);
                         range.detach();
                         finalRange.detach();
-
-
                     }
-
-
-
-                    
-
-
-
                 }
             }
             else{

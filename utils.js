@@ -22,26 +22,18 @@ export class Util{
         this.visualView.insertBefore(this.CreateP(),target);
     }
 
-    static InsertAfterP(target, textNode = null){
+    static InsertAfterP(target, node = null){
         let p = this.CreateP();
         this.visualView.insertBefore(p,target);
 
-        if(textNode != null){          
-            let nextSibling = textNode.parentNode.nextSibling;
-            let nodesToMove = [];
-            while(nextSibling != null && nextSibling.nodeName == "SPAN"){
-                nodesToMove.push(nextSibling);
-                nextSibling = nextSibling.nextSibling;
-            }
-            for(let i=0; i < nodesToMove.length; i++){
-                p.appendChild(nodesToMove[i]);
-            }
+        if(node != null){          
+            this.MoveNodes(p,node);   
         }  
         //We return the first text node of the newly formed paragraph.
         return p.firstChild.firstChild;
     }
 
-    static InsertAfterPWithContent(target, node, content, moveNodes = false){
+    static InsertAfterPWithContent(target, node, content, doMoveNodes = false){
         let p = this.CreateP(content);
         this.visualView.insertBefore(p, target);
         
@@ -51,17 +43,21 @@ export class Util{
             }
         });
         
-        if(!moveNodes){
-
-
-
-
-            
+        if(doMoveNodes){
+            this.MoveNodes(p,node);      
         }
-        else{
-
-        }
-
         return p.firstChild.firstChild;
+    }
+
+    static MoveNodes(p, node){
+        let nextSibling = node.parentNode.nextSibling;
+        let nodesToMove = [];
+        while(nextSibling != null && nextSibling.nodeName == "SPAN"){
+            nodesToMove.push(nextSibling);
+            nextSibling = nextSibling.nextSibling;
+        }
+        for(let i=0; i < nodesToMove.length; i++){
+            p.appendChild(nodesToMove[i]);
+        }
     }
 }
