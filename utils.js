@@ -60,4 +60,59 @@ export class Util{
             p.appendChild(nodesToMove[i]);
         }
     }
+
+    static isBadSelection(selection){
+    
+        let currentNode;
+        let destinationNode;
+        
+        if(this.isSelectionBackwards(selection)){
+            currentNode = selection.focusNode;
+            destinationNode = selection.anchorNode;
+        }
+        else{
+            currentNode = selection.anchorNode;
+            destinationNode = selection.focusNode;
+        }
+    
+        while(!currentNode.isSameNode(destinationNode)){
+            if(!this.visualView.contains(currentNode)){
+                return true;       
+            }
+    
+            if(currentNode.firstChild != null){
+                currentNode = currentNode.firstChild;
+            }
+            else if (currentNode.nextSibling != null){
+                
+                currentNode = currentNode.nextSibling;
+            }
+            else if(currentNode.parentNode.nextSibling != null){
+                currentNode = currentNode.parentNode.nextSibling;
+            }
+            else if(currentNode.parentNode.parentNode.nextSibling != null){
+                currentNode = currentNode.parentNode.parentNode.nextSibling;
+            }
+            else{
+                console.warn("We are going to loop since we don't change the current node. WE NEED TO FIX THIS.");
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static isSelectionBackwards(selection){
+        let backwards = false;
+        if(selection == null){
+            return backwards;
+        }
+        if(!selection.Collapsed){
+            let range = document.createRange();
+            range.setStart(selection.anchorNode, selection.anchorOffset);
+            range.setEnd(selection.focusNode, selection.focusOffset);
+            backwards = range.collapsed;  
+            range.detach();  
+        }
+        return backwards;
+    }
 }

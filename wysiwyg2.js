@@ -184,26 +184,25 @@ function HandleEnter(e){
                 //We got something selected.
                 else{
                     //We select something bad.
-                    if(isBadSelection(selection)){
+                    if(Util.isBadSelection(selection)){
                         alert("Your selection is containing things outside the input box.");
                         return; 
                     }
-                    
+
                     let textNodes = [];
                     let currentNode;
                     let startingNode;
                     let destinationNode;
                     let startingNodeOffset;
                     let destinationNodeOffset;
-    
-                    if(isSelectionBackwards(selection)){
+                    //We check if the selection is from end to start.
+                    if(Util.isSelectionBackwards(selection)){
                         currentNode = selection.focusNode;
                         startingNode = selection.focusNode;
                         destinationNode = selection.anchorNode;
                         startingNodeOffset = selection.focusOffset;
                         destinationNodeOffset = selection.anchorOffset;
                     }
-                    //This might be redundant.
                     else{
                         currentNode = selection.anchorNode;
                         startingNode = selection.anchorNode;
@@ -211,20 +210,10 @@ function HandleEnter(e){
                         startingNodeOffset = selection.anchorOffset;
                         destinationNodeOffset = selection.focusOffset;
                     }
-                    console.log("DestinationNode what is it?: " + destinationNode);
-
+                    //We grab all the nodes.
                     while(!currentNode.isSameNode(destinationNode)){
-                        //console.log("Loop currentNode: " + currentNode);
-                        //console.log("Loop currentNodeName: " + currentNode.nodeName);
-                        //console.log("Loop currentNodeType: " + currentNode.nodeType);
-                        //If it is inside visualview add it to our ranges.
                         if(currentNode.nodeName == "#text"){
-                            console.log("We have a text node.");
                             textNodes.push(currentNode);
-                        }
-                        else{
-                            console.log("We have a non text node: " + currentNode.nodeName);
-                            //we ignore it.
                         }
                 
                         if(currentNode.firstChild != null){
@@ -242,27 +231,17 @@ function HandleEnter(e){
                         }
                         else{
                             console.warn("We are going to loop since we don't change the current node. WE NEED TO FIX THIS.");
-                            //IF THIS STILL OCCURS, we have to fix it in a different way.
                             return;
                         }
-
                     }
-                    //We need to grab the last one as well.
-                    if(currentNode.isSameNode(destinationNode)){
-                        textNodes.push(currentNode);
-                    }
-                    console.log("We hebben text nodes gevonden en wel: " + textNodes.length);
-                    
-                    //We only have one node so handle it differently.
+                    //We need to grab the last node.
+                    textNodes.push(currentNode);
+                    //We only have one node selected.
                     if(startingNode == destinationNode){
-                        console.log("We only have one node.");
-                        console.log("STARTOFFSET: " + startingNodeOffset);
-                            console.log("DESTOFFSET: " + destinationNodeOffset);
-                            console.log("Length: " + textNodes[0].length);
+
 
                         if(textNodes[0].length == destinationNodeOffset && startingNodeOffset == 0){
                             //We have the full node.
-                            console.log("Full node selected.");
                             let parent = textNodes[0].parentNode;
                             if(parent.nodeName == "SPAN"){
                                 if(parent.previousSibling == null && parent.nextSibling == null){
@@ -409,17 +388,11 @@ function HandleEnter(e){
                                         selection.addRange(range);
                                         range.detach();
                                     }
-                                    
-                                    //parent.parentNode.removeChild(parent);
-
-
                                 }
                             }
                             else{
                                 console.warn("We were expecting a SPAN here.");
-                            }
-                           
-
+                            }                       
                         }
                         else{
                             //We have a partial node.
@@ -429,9 +402,7 @@ function HandleEnter(e){
                             range.extractContents();
                             //let content = range.extractContents();
                             //console.log("Content: " + content);
-                            //we have it from the start
-                            
-                            
+                            //we have it from the start                                             
                             if(startingNodeOffset == 0){
                                 console.log("Partial from the start.");
                                 //check if we are the very first one.
@@ -460,15 +431,10 @@ function HandleEnter(e){
                                             selection.removeAllRanges();
                                             selection.addRange(range);
                                             range.detach();
-
-
                                         }
                                         else{
                                             console.warn("We expected a P tag here.");
                                         }
-
-
-
                                     }
                                     else{
                                         console.log("We are not the first span.");
@@ -479,25 +445,17 @@ function HandleEnter(e){
                                                 range.setStartAfter(parent);
                                                 range.setEndAfter(parent);
                                                 let p = document.createElement("P");
-                                                
-                                                
-                                                
-                                                //if(startingNode.parentElement.getAttributeNode("class") != null){
+                                           //if(startingNode.parentElement.getAttributeNode("class") != null){
     
                                                   //  span.className = startingNode.parentElement.getAttributeNode("class").value;
                                                 //}
                                                 range.insertNode(p);
-
-                                                p.appendChild(startingNode.parentNode);
-                                                
-    
+                                                p.appendChild(startingNode.parentNode);        
                                                 range.setStartBefore(startingNode);
                                                 range.setEndBefore(startingNode);
                                                 selection.removeAllRanges();
                                                 selection.addRange(range);
                                                 range.detach();
-    
-    
                                             }
                                             else{
                                                 console.warn("We expected a P tag here.");
@@ -524,9 +482,7 @@ function HandleEnter(e){
                                             else{
                                                 console.warn("We are expecting a P element here.");
                                             }
-                                            let p = document.createElement("P");
-                                        
-                                        
+                                            let p = document.createElement("P");                            
                                             range.insertNode(p);
                                             p.appendChild(startingNode.parentNode);
 
@@ -534,28 +490,22 @@ function HandleEnter(e){
                                                 p.appendChild(siblingsToTakeWith[i]);
                                             
                                             }
-
                                             range.setStartBefore(startingNode);
                                             range.setEndBefore(startingNode);
                                             selection.removeAllRanges();
                                             selection.addRange(range);
                                             range.detach();
-
                                         }
                                     }
                                 }
                                 else{
                                     console.warn("We were expecting a span.");
-                                }
-                                
+                                }                         
                             }   
                             else if(tempLen == destinationNodeOffset ){
                                 console.log("Partial till the end.");
 
-                                if(startingNode.parentNode.nodeName == "SPAN"){
-                                    
-                                    
-                                        
+                                if(startingNode.parentNode.nodeName == "SPAN"){                                                                                                             
                                         if(startingNode.parentNode.nextSibling == null){
                                             console.log("We are the last span.");
                                             if(startingNode.parentNode.parentNode.nodeName == "P"){
@@ -564,28 +514,19 @@ function HandleEnter(e){
                                                 range.setEndAfter(parent);
                                                 let p = document.createElement("P");
                                                 let span = document.createElement("SPAN");
-                                                let zwsp = document.createTextNode("\u200B");
-                                                
-                                                
-                                                
+                                                let zwsp = document.createTextNode("\u200B");                                         
                                                 //if(startingNode.parentElement.getAttributeNode("class") != null){
-    
                                                   //  span.className = startingNode.parentElement.getAttributeNode("class").value;
                                                 //}
                                                 range.insertNode(p);
                                                 p.appendChild(span);
                                                 span.appendChild(zwsp);
-
-                                                //p.appendChild(startingNode.parentNode);
-                                                
-    
+                                                //p.appendChild(startingNode.parentNode);                                        
                                                 range.setStartBefore(zwsp);
                                                 range.setEndBefore(zwsp);
                                                 selection.removeAllRanges();
                                                 selection.addRange(range);
                                                 range.detach();
-    
-    
                                             }
                                             else{
                                                 console.warn("We expected a P tag here.");
@@ -612,25 +553,19 @@ function HandleEnter(e){
                                             else{
                                                 console.warn("We are expecting a P element here.");
                                             }
-                                            let p = document.createElement("P");
-                                        
-                                        
+                                            let p = document.createElement("P");                                 
                                             range.insertNode(p);
                                             //p.appendChild(startingNode.parentNode);
-
                                             for(i=0; i < siblingsToTakeWith.length; i++){
                                                 p.appendChild(siblingsToTakeWith[i]);
                                             
                                             }
-
                                             range.setStartBefore(siblingsToTakeWith[0]);
                                             range.setEndBefore(siblingsToTakeWith[0]);
                                             selection.removeAllRanges();
                                             selection.addRange(range);
                                             range.detach();
-
-                                        }
-                                    
+                                        }                               
                                 }
                                 else{
                                     console.warn("We were expecting a span.");
@@ -671,19 +606,13 @@ function HandleEnter(e){
                                                   //  span.className = startingNode.parentElement.getAttributeNode("class").value;
                                                 //}
                                                 range.insertNode(p);
-
-
                                                 p.appendChild(span);
                                                 span.appendChild(text);
-                                                
-    
                                                 range.setStartBefore(span.firstChild);
                                                 range.setEndBefore(span.firstChild);
                                                 selection.removeAllRanges();
                                                 selection.addRange(range);
                                                 range.detach();
-    
-    
                                             }
                                             else{
                                                 console.warn("We expected a P tag here.");
@@ -710,9 +639,7 @@ function HandleEnter(e){
                                             else{
                                                 console.warn("We are expecting a P element here.");
                                             }
-                                            let p = document.createElement("P");
-                                        
-                                        
+                                            let p = document.createElement("P");                                    
                                             range.insertNode(p);
                                             range.setStart(startingNode,startingNodeOffset);
                                             range.setEndAfter(startingNode);
@@ -722,10 +649,7 @@ function HandleEnter(e){
                                             if(startingNode.parentNode.getAttributeNode("class") != null){
                                                 span.className = startingNode.parentNode.getAttributeNode("class").value;
                                             }
-
                                             let text = document.createTextNode(content.textContent);
-                                            
-
                                             p.appendChild(span);
                                             span.appendChild(text);
 
@@ -733,7 +657,6 @@ function HandleEnter(e){
                                                 p.appendChild(siblingsToTakeWith[i]);
                                             
                                             }
-
                                             range.setStartBefore(text);
                                             range.setEndBefore(text);
                                             selection.removeAllRanges();
@@ -783,8 +706,6 @@ function HandleEnter(e){
                                                 nextSibling = nextSibling.nextSibling;
                                             }
                                             console.log("We take siblings amount with: " + siblingsToTakeWith.length);
-
-
                                 finalRange.setStartAfter(destinationNode.parentNode.parentNode);
                                 finalRange.setEndAfter(destinationNode.parentNode.parentNode);
                                 finalRange.insertNode(p);
@@ -799,7 +720,6 @@ function HandleEnter(e){
                                                 p.appendChild(siblingsToTakeWith[i]);
                                             
                                             }
-
                                 finalRange.setStart(text, 0);
                                 finalRange.setEnd(text, 0);
 
@@ -815,23 +735,19 @@ function HandleEnter(e){
                             if(startingNodeOffset == 0){
                                 //We have the full node.
                                 //just delete
-
                                 if(startingNode.parentNode.previousSibling == null && startingNode.parentNode.nextSibling == null){
                                     startingNode.parentNode.parentNode.parentNode.removeChild(startingNode.parentNode.parentNode);
                                 }
                                 else{
                                     startingNode.parentNode.parentNode.removeChild(startingNode.parentNode);
                                 }
-
                             }
                             else{
                                 range.setStart(startingNode, startingNodeOffset);
                                 range.setEnd(startingNode, startingNode.textContent.length);
                                 range.extractContents();
                             }
-
-                        }
-                        
+                        }              
                         else{
                             //We handle the node in the middle.
                             console.log("HANDLE MIDDLE NODE");
@@ -843,7 +759,6 @@ function HandleEnter(e){
                             }
 
                         }
-
                         }
                         selection.removeAllRanges();
                         selection.addRange(finalRange);
@@ -901,81 +816,10 @@ function HandleEnter(e){
                 console.log("Something went wrong, we try to push enter outside of a text node");
                 //If everything is deleted it can hit P without span, or div. without p.
                 //Need to fix those two edge cases.
-
                 console.log("NODENAME: " + node.nodeName);
             }
-
         }
     }
-}
-
-//HELPER FUNCTIONS FOR SELECTION
-function isSelectionBackwards(selection){
-    let backwards = false;
-    if(selection == null){
-        console.log("This is happening?!");
-        return backwards;
-    }
-    if(!selection.Collapsed){
-        let range = document.createRange();
-        range.setStart(selection.anchorNode, selection.anchorOffset);
-        range.setEnd(selection.focusNode, selection.focusOffset);
-        backwards = range.collapsed;  
-        range.detach();  
-    }
-    return backwards;
-}
-
-function isBadSelection(selection){
-    
-    let currentNode;
-    let destinationNode;
-    
-    if(isSelectionBackwards(selection)){
-        currentNode = selection.focusNode;
-        destinationNode = selection.anchorNode;
-    }
-    //This might be redundant.
-    else{
-        currentNode = selection.anchorNode;
-        destinationNode = selection.focusNode;
-    }
-
-    while(!currentNode.isSameNode(destinationNode)){
-        //console.log("Loop currentNode: " + currentNode);
-        //console.log("Loop currentNodeName: " + currentNode.nodeName);
-        //console.log("Loop currentNodeType: " + currentNode.nodeType);
-        //If it is inside visualview add it to our ranges.
-        if(!visualView.contains(currentNode)){
-            console.log("IM NOT INSIDE, so bad selection");
-            return true;
-            //let tempRange = document.createRange();
-            //tempRange.createRange();
-            //tempRange.selectNode(currentNode);
-            //ranges.push(tempRange);
-        }
-
-        if(currentNode.firstChild != null){
-            currentNode = currentNode.firstChild;
-        }
-        else if (currentNode.nextSibling != null){
-            
-            currentNode = currentNode.nextSibling;
-        }
-        else if(currentNode.parentNode.nextSibling != null){
-            currentNode = currentNode.parentNode.nextSibling;
-        }
-        else if(currentNode.parentNode.parentNode.nextSibling != null){
-            currentNode = currentNode.parentNode.parentNode.nextSibling;
-        }
-        else{
-            console.warn("We are going to loop since we don't change the current node. WE NEED TO FIX THIS.");
-            //IF THIS STILL OCCURS, we have to fix it in a different way.
-            return true;
-        }
-    }
-    return false;
-
 }
 
 //function sleep(ms) {
