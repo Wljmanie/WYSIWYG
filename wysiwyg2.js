@@ -27,8 +27,7 @@
 
 /*TODO
     Enter Fucntionaility
-        on default
-            create a new paragraph.
+       
         shift enter
             create a br
         ctrl enter
@@ -86,7 +85,6 @@ if(!isSupported){
 } 
 //Grab the variable we need from the DOM.
 const visualView = document.getElementById("visualview");
-//Util.SetDiv(visualView);
 const htmlView = document.getElementById("htmlview");
 const boldButton = document.getElementById("boldbutton");
 
@@ -142,14 +140,16 @@ function HandleEnter(e){
                     else if(range.startOffset == node.length){
                         //We check if we are the very end of the Paragraph.
                         if(node.parentNode.nextSibling == null){                    
-                            range.selectNode(Util.InsertAfterP(node.parentNode.parentNode.nextSibling));
+                            let cursorNode = Util.InsertBeforeP(node.parentNode.parentNode.nextSibling);
+                            range.setStart(cursorNode, 0);
+                            range.setEnd(cursorNode, 0); 
                             selection.removeAllRanges();
                             selection.addRange(range);                            
                             range.detach();
                             return;          
                         }
                         else{ 
-                            let cursorNode = Util.InsertAfterP(node.parentNode.parentNode.nextSibling, node);
+                            let cursorNode = Util.InsertBeforeP(node.parentNode.parentNode.nextSibling, node);
                             range.setStart(cursorNode, 0);
                             range.setEnd(cursorNode, 0);                       
                             selection.removeAllRanges();
@@ -162,7 +162,7 @@ function HandleEnter(e){
                             //We don't have any nodes to move to the new Paragraph.
                         if(node.parentNode.nextSibling == null){                         
                             range.setEnd(node, node.length);
-                            let cursorNode = Util.InsertAfterPWithContent(node.parentNode.parentNode.nextSibling, node, range.extractContents());
+                            let cursorNode = Util.InsertBeforePWithContent(node.parentNode.parentNode.nextSibling, node, range.extractContents());
                             range.setStart(cursorNode, 0);
                             range.setEnd(cursorNode, 0);                       
                             selection.removeAllRanges();
@@ -172,9 +172,9 @@ function HandleEnter(e){
                             //We have nodes to move to the new Paragraph.
                         else{                              
                             range.setEnd(node, node.length);
-                            let cursorNode = Util.InsertAfterPWithContent(node.parentNode.parentNode.nextSibling, node, range.extractContents(), true);                             
-                            range.setStartBefore(cursorNode, 0);
-                            range.setEndBefore(cursorNode, 0);
+                            let cursorNode = Util.InsertBeforePWithContent(node.parentNode.parentNode.nextSibling, node, range.extractContents(), true);                             
+                            range.setStart(cursorNode, 0);
+                            range.setEnd(cursorNode, 0);
                             selection.removeAllRanges();
                             selection.addRange(range);                            
                             range.detach(); 
@@ -195,6 +195,7 @@ function HandleEnter(e){
                     let destinationNode;
                     let startingNodeOffset;
                     let destinationNodeOffset;
+                    
                     //We check if the selection is from end to start.
                     if(Util.isSelectionBackwards(selection)){
                         currentNode = selection.focusNode;
@@ -236,587 +237,72 @@ function HandleEnter(e){
                     }
                     //We need to grab the last node.
                     textNodes.push(currentNode);
-                    //We only have one node selected.
-                    if(startingNode == destinationNode){
 
-
-                        if(textNodes[0].length == destinationNodeOffset && startingNodeOffset == 0){
-                            //We have the full node.
-                            let parent = textNodes[0].parentNode;
-                            if(parent.nodeName == "SPAN"){
-                                if(parent.previousSibling == null && parent.nextSibling == null){
-                                    //We are the last span, so delete the p as well.
-                                    console.log("We are the last span.");
-                                    //we grab the one above p and delete the child.
-                                   
-                                    if(parent.parentNode.nodeName == "P"){
-                                        
-                                        //We need to create the P object.
-                                        if(parent.parentNode.nextSibling.nodeName == "P"){
-                                            //We have a next sibling put it in front.
-                                            //TODO CLEAN UP the .parent.parent stuff.
-                                                //this might get a null?
-                                                range.setStartBefore(parent.parentNode.nextSibling);
-                                                range.setEndBefore(parent.parentNode.nextSibling);
-    
-    
-                                                p = document.createElement("P");
-                                                span = document.createElement("SPAN");
-                                                zwsp = document.createTextNode("\u200B");
-                                                range.insertNode(p);
-                                                p.appendChild(span);
-                                                span.appendChild(zwsp);
-                                                range.selectNode(zwsp);
-                                                selection.removeAllRanges();
-                                                selection.addRange(range);                            
-                                                range.detach();
-                                                console.log("Created the new P.");
-                                                parent.parentNode.parentNode.removeChild(parent.parentNode);
-                                            
-                                        }
-                                        else if(parent.parentNode.previousSibling.nodeName == "P"){
-                                            
-                                                range.setStartAfter(parent.parentNode.previousSibling);
-                                                range.setEndAfter(parent.parentNode.previousSibling);
-                                                p = document.createElement("P");
-                                                span = document.createElement("SPAN");
-                                                zwsp = document.createTextNode("\u200B");
-                                                range.insertNode(p);
-                                                p.appendChild(span);
-                                                span.appendChild(zwsp);
-                                                range.selectNode(zwsp);
-                                                selection.removeAllRanges();
-                                                selection.addRange(range);                            
-                                                range.detach();
-                                                console.log("Created the new P.");
-                                                parent.parentNode.parentNode.removeChild(parent.parentNode);
-                                            
-                                        }
-                                        else{
-                                                console.warn("This should never happen.")  ;
-                                                //We are the last span and fully selected the node.
-                                                let zwsp = document.createTextNode("\u200B");
-                                                parent.replaceChild(zwsp,startingNode);
-                                                range.selectNode(zwsp);
-                                                selection.removeAllRanges();
-                                                selection.addRange(range);                            
-                                                range.detach();
-                                        }                         
-                                    }
-                                    else{
-                                        console.warn("We expected a P here.");
-                                        
-                                    }
-                                }
-                                else{
-                                    console.log("We still have other spans.");
-                                    //We need to see if there are spans behind us and grab those, to take them with us.
-                                    let siblingsToTakeWith = [];
-                                    let nextSibling = parent.nextSibling;
-                                    if(nextSibling == null){
-                                        console.log("We don't have more siblings.");
-                                            if(parent.parentNode.nodeName == "P"){
-                                                range.setStartAfter(parent.parentNode);
-                                                range.setEndAfter(parent.parentNode);
-                                                let p = document.createElement("P");
-                                                let span = document.createElement("SPAN");
-                                                let zwsp = document.createTextNode("\u200B");
-                                                range.insertNode(p);
-                                                p.appendChild(span);
-                                                span.appendChild(zwsp);
-                                                range.selectNode(zwsp);
-                                                selection.removeAllRanges();
-                                                selection.addRange(range);                            
-                                                range.detach();
-                                                console.log("Created the new P.");
-                                                parent.parentNode.removeChild(parent);
-
-                                            }
-                                            else{
-                                                console.warn("We expected a P tag here.");
-                                            }
-
-                                    }
-                                    else{
-                                        console.log("We do have more siblings.");
-
-                                        while(nextSibling != null && nextSibling.nodeName == "SPAN"){
-                                            siblingsToTakeWith.push(nextSibling);
-                                            nextSibling = nextSibling.nextSibling;
-                                        }
-                                        console.log("We take siblings amount with: " + siblingsToTakeWith.length);
-
-                                        range.setStartAfter(parent.parentNode);
-                                        range.setEndAfter(parent.parentNode);
-                                        p = document.createElement("P");
-                                        
-                                        
-                                        range.insertNode(p);
-
-                                        for(i=0; i < siblingsToTakeWith.length; i++){
-                                            p.appendChild(siblingsToTakeWith[i]);
-                                            
-                                        }                              
-                                        
-                                        console.log("Created the new P.");
-                                        //if we don't have a previous sibling, create an empty p before us.
-                                        if(parent.previousSibling == null){
-                                            console.log("We don't have a previous sibling.");
-                                            
-
-                                            range.setStartBefore(parent.parentNode);
-                                            range.setEndBefore(parent.parentNode);
-                                            let p = document.createElement("P");
-                                            let span = document.createElement("SPAN");
-                                            let zwsp = document.createTextNode("\u200B");
-                                            range.insertNode(p);
-                                            p.appendChild(span);
-                                            span.appendChild(zwsp);
-                                    
-                                    
-                                            console.log("Created the new P.");
-                                            parent.parentNode.parentNode.removeChild(parent.parentNode);
-
-                                        }
-                                        else{
-                                            parent.parentNode.removeChild(parent);
-                                        }
-                                        //parent.parentNode.parentNode.removeChild(parent.parentNode);
-                                        range.setStartBefore(siblingsToTakeWith[0].firstChild);
-                                        range.setEndBefore(siblingsToTakeWith[0].firstChild);
-                                        selection.removeAllRanges();
-                                        selection.addRange(range);
-                                        range.detach();
-                                    }
-                                }
-                            }
-                            else{
-                                console.warn("We were expecting a SPAN here.");
-                            }                       
+                    //We are at the end of the paragraph.
+                    if(destinationNode.length == destinationNodeOffset && destinationNode.parentNode.nextSibling == null){
+                        let newNode = Util.InsertBeforeP(destinationNode.parentNode.parentNode.nextSibling);                  
+                        range.selectNode(newNode);                           
+                        selection.removeAllRanges();
+                        selection.addRange(range);                            
+                        range.detach();                                 
+                    }
+                    //We have content to move to the new Paragraph.
+                    else {
+                        if(destinationNode.parentNode.nextSibling == null){
+                            //range.extractContents();
+                            range.setStart(destinationNode, destinationNodeOffset);
+                            range.setEnd(destinationNode, destinationNode.length);
+                            let cursorNode = Util.InsertBeforePWithContent(destinationNode.parentNode.parentNode.nextSibling, destinationNode, range.extractContents());                             
+                            cursorNode = Util.InsertBeforeP(currentNode.parentNode.parentNode.nextSibling);
+                            range.setStart(cursorNode, 0);
+                            range.setEnd(cursorNode, 0);
+                            selection.removeAllRanges();
+                            selection.addRange(range);                            
+                            range.detach();     
                         }
                         else{
-                            //We have a partial node.
-                            console.log("Partial node selected.");
-                            //delete the partial stuff. check if there are more spans behind us. create p.
-                            let tempLen = textNodes[0].length;
-                            range.extractContents();
-                            //let content = range.extractContents();
-                            //console.log("Content: " + content);
-                            //we have it from the start                                             
-                            if(startingNodeOffset == 0){
-                                console.log("Partial from the start.");
-                                //check if we are the very first one.
-                                //console.log("Wat is onze parent hier dan?: " + startingNode.parent);
-                                if(startingNode.parentNode.nodeName == "SPAN"){
-                                    if(startingNode.parentNode.previousSibling == null){
-                                        console.log("We are the first span.");
-                                        if(startingNode.parentNode.parentNode.nodeName == "P"){
-                                            let parent = startingNode.parentNode.parentNode;
-                                            range.setStartBefore(parent);
-                                            range.setEndBefore(parent);
-                                            let p = document.createElement("P");
-                                            let span = document.createElement("SPAN");
-                                            let zwsp = document.createTextNode("\u200B");
-                                            
-                                            //if(startingNode.parentElement.getAttributeNode("class") != null){
-
-                                              //  span.className = startingNode.parentElement.getAttributeNode("class").value;
-                                            //}
-                                            range.insertNode(p);
-                                            p.appendChild(span);
-                                            span.appendChild(zwsp);
-
-                                            range.setStartBefore(startingNode);
-                                            range.setEndBefore(startingNode);
-                                            selection.removeAllRanges();
-                                            selection.addRange(range);
-                                            range.detach();
-                                        }
-                                        else{
-                                            console.warn("We expected a P tag here.");
-                                        }
-                                    }
-                                    else{
-                                        console.log("We are not the first span.");
-                                        if(startingNode.parentNode.nextSibling == null){
-                                            console.log("We are the last span.");
-                                            if(startingNode.parentNode.parentNode.nodeName == "P"){
-                                                let parent = startingNode.parentNode.parentNode;
-                                                range.setStartAfter(parent);
-                                                range.setEndAfter(parent);
-                                                let p = document.createElement("P");
-                                           //if(startingNode.parentElement.getAttributeNode("class") != null){
-    
-                                                  //  span.className = startingNode.parentElement.getAttributeNode("class").value;
-                                                //}
-                                                range.insertNode(p);
-                                                p.appendChild(startingNode.parentNode);        
-                                                range.setStartBefore(startingNode);
-                                                range.setEndBefore(startingNode);
-                                                selection.removeAllRanges();
-                                                selection.addRange(range);
-                                                range.detach();
-                                            }
-                                            else{
-                                                console.warn("We expected a P tag here.");
-                                            }
-                                        }
-                                        else{
-                                            //We are somewhere in the middle.
-                                            //and we have to take multiple ones with us.
-                                            let siblingsToTakeWith = [];
-                                            let nextSibling = startingNode.parentNode.nextSibling;
-
-                                            while(nextSibling != null && nextSibling.nodeName == "SPAN"){
-                                                siblingsToTakeWith.push(nextSibling);
-                                                nextSibling = nextSibling.nextSibling;
-                                            }
-                                            console.log("We take siblings amount with: " + siblingsToTakeWith.length);
-
-
-                                            if(startingNode.parentNode.parentNode.nodeName == "P"){
-                                                range.setStartAfter(startingNode.parentNode.parentNode);
-                                                range.setEndAfter(startingNode.parentNode.parentNode);
-
-                                            }
-                                            else{
-                                                console.warn("We are expecting a P element here.");
-                                            }
-                                            let p = document.createElement("P");                            
-                                            range.insertNode(p);
-                                            p.appendChild(startingNode.parentNode);
-
-                                            for(i=0; i < siblingsToTakeWith.length; i++){
-                                                p.appendChild(siblingsToTakeWith[i]);
-                                            
-                                            }
-                                            range.setStartBefore(startingNode);
-                                            range.setEndBefore(startingNode);
-                                            selection.removeAllRanges();
-                                            selection.addRange(range);
-                                            range.detach();
-                                        }
-                                    }
-                                }
-                                else{
-                                    console.warn("We were expecting a span.");
-                                }                         
-                            }   
-                            else if(tempLen == destinationNodeOffset ){
-                                console.log("Partial till the end.");
-
-                                if(startingNode.parentNode.nodeName == "SPAN"){                                                                                                             
-                                        if(startingNode.parentNode.nextSibling == null){
-                                            console.log("We are the last span.");
-                                            if(startingNode.parentNode.parentNode.nodeName == "P"){
-                                                let parent = startingNode.parentNode.parentNode;
-                                                range.setStartAfter(parent);
-                                                range.setEndAfter(parent);
-                                                let p = document.createElement("P");
-                                                let span = document.createElement("SPAN");
-                                                let zwsp = document.createTextNode("\u200B");                                         
-                                                //if(startingNode.parentElement.getAttributeNode("class") != null){
-                                                  //  span.className = startingNode.parentElement.getAttributeNode("class").value;
-                                                //}
-                                                range.insertNode(p);
-                                                p.appendChild(span);
-                                                span.appendChild(zwsp);
-                                                //p.appendChild(startingNode.parentNode);                                        
-                                                range.setStartBefore(zwsp);
-                                                range.setEndBefore(zwsp);
-                                                selection.removeAllRanges();
-                                                selection.addRange(range);
-                                                range.detach();
-                                            }
-                                            else{
-                                                console.warn("We expected a P tag here.");
-                                            }
-                                        }
-                                        else{
-                                            //We are somewhere in the middle.
-                                            //and we have to take multiple ones with us.
-                                            let siblingsToTakeWith = [];
-                                            let nextSibling = startingNode.parentNode.nextSibling;
-
-                                            while(nextSibling != null && nextSibling.nodeName == "SPAN"){
-                                                siblingsToTakeWith.push(nextSibling);
-                                                nextSibling = nextSibling.nextSibling;
-                                            }
-                                            console.log("We take siblings amount with: " + siblingsToTakeWith.length);
-
-
-                                            if(startingNode.parentNode.parentNode.nodeName == "P"){
-                                                range.setStartAfter(startingNode.parentNode.parentNode);
-                                                range.setEndAfter(startingNode.parentNode.parentNode);
-
-                                            }
-                                            else{
-                                                console.warn("We are expecting a P element here.");
-                                            }
-                                            let p = document.createElement("P");                                 
-                                            range.insertNode(p);
-                                            //p.appendChild(startingNode.parentNode);
-                                            for(i=0; i < siblingsToTakeWith.length; i++){
-                                                p.appendChild(siblingsToTakeWith[i]);
-                                            
-                                            }
-                                            range.setStartBefore(siblingsToTakeWith[0]);
-                                            range.setEndBefore(siblingsToTakeWith[0]);
-                                            selection.removeAllRanges();
-                                            selection.addRange(range);
-                                            range.detach();
-                                        }                               
-                                }
-                                else{
-                                    console.warn("We were expecting a span.");
-                                }                             
-                                //check if we are the last one.
-                                    //create a new empty p behind.
-                                //otherwise take the others with.
-                            }
-                            else{
-                                console.log("Partial in the middle");
-                                //take everything behind us with us in a new p.
-                                
-                                //check if we are the very first one.
-                                //console.log("Wat is onze parent hier dan?: " + startingNode.parent);
-                                if(startingNode.parentNode.nodeName == "SPAN"){                             
-                                        
-                                        if(startingNode.parentNode.nextSibling == null){
-                                            console.log("We are the last span.");
-                                            if(startingNode.parentNode.parentNode.nodeName == "P"){
-                                                let parent = startingNode.parentNode.parentNode;
-                                                range.setStart(startingNode,startingNodeOffset);
-                                                range.setEndAfter(startingNode);
-                                                let content = range.extractContents();
-                                                console.log(content.textContent);
-
-
-                                                range.setStartAfter(parent);
-                                                range.setEndAfter(parent);
-                                                let p = document.createElement("P");
-                                                let span = document.createElement("SPAN");
-                                                if(startingNode.parentNode.getAttributeNode("class") != null){
-                                                    span.className = startingNode.parentNode.getAttributeNode("class").value;
-                                                }
-
-                                                let text = document.createTextNode(content.textContent);                                                             
-                                                //if(startingNode.parentElement.getAttributeNode("class") != null){
-    
-                                                  //  span.className = startingNode.parentElement.getAttributeNode("class").value;
-                                                //}
-                                                range.insertNode(p);
-                                                p.appendChild(span);
-                                                span.appendChild(text);
-                                                range.setStartBefore(span.firstChild);
-                                                range.setEndBefore(span.firstChild);
-                                                selection.removeAllRanges();
-                                                selection.addRange(range);
-                                                range.detach();
-                                            }
-                                            else{
-                                                console.warn("We expected a P tag here.");
-                                            }
-                                        }
-                                        else{
-                                            //We are somewhere in the middle.
-                                            //and we have to take multiple ones with us.
-                                            let siblingsToTakeWith = [];
-                                            let nextSibling = startingNode.parentNode.nextSibling;
-
-                                            while(nextSibling != null && nextSibling.nodeName == "SPAN"){
-                                                siblingsToTakeWith.push(nextSibling);
-                                                nextSibling = nextSibling.nextSibling;
-                                            }
-                                            console.log("We take siblings amount with: " + siblingsToTakeWith.length);
-
-
-                                            if(startingNode.parentNode.parentNode.nodeName == "P"){
-                                                range.setStartAfter(startingNode.parentNode.parentNode);
-                                                range.setEndAfter(startingNode.parentNode.parentNode);
-
-                                            }
-                                            else{
-                                                console.warn("We are expecting a P element here.");
-                                            }
-                                            let p = document.createElement("P");                                    
-                                            range.insertNode(p);
-                                            range.setStart(startingNode,startingNodeOffset);
-                                            range.setEndAfter(startingNode);
-                                            let content = range.extractContents();
-                                            console.log(content.textContent);
-                                            let span = document.createElement("SPAN");
-                                            if(startingNode.parentNode.getAttributeNode("class") != null){
-                                                span.className = startingNode.parentNode.getAttributeNode("class").value;
-                                            }
-                                            let text = document.createTextNode(content.textContent);
-                                            p.appendChild(span);
-                                            span.appendChild(text);
-
-                                            for(i=0; i < siblingsToTakeWith.length; i++){
-                                                p.appendChild(siblingsToTakeWith[i]);
-                                            
-                                            }
-                                            range.setStartBefore(text);
-                                            range.setEndBefore(text);
-                                            selection.removeAllRanges();
-                                            selection.addRange(range);
-                                            range.detach();
-
-                                        }                                
-                                }
-                                else{
-                                    console.warn("We were expecting a span.");
-                                }
-                            }
+                            range.setStart(destinationNode, destinationNodeOffset);
+                            range.setEnd(destinationNode, destinationNode.length);
+                            let cursorNode = Util.InsertBeforePWithContent(destinationNode.parentNode.parentNode.nextSibling, destinationNode, range.extractContents(), true);                             
+                            cursorNode = Util.InsertBeforeP(currentNode.parentNode.parentNode.nextSibling);
+                            range.setStart(cursorNode, 0);
+                            range.setEnd(cursorNode, 0);
+                            selection.removeAllRanges();
+                            selection.addRange(range);                            
+                            range.detach(); 
+                        }    
+                    }
+                    if(textNodes.length == 1){
+                        if(startingNodeOffset == 0 && destinationNodeOffset == destinationNode.length){
+                            Util.DeleteNode(startingNode);
+                        }
+                        else{
+                            let deleteRange = document.createRange();
+                            deleteRange.setStart(startingNode, startingNodeOffset);
+                            deleteRange.setEnd(destinationNode, destinationNodeOffset);
+                            deleteRange.extractContents();
+                            deleteRange.detach();
                         }
                     }
                     else{
-                        //Check if the node is the last one in the p.
-                        //if fully selected create empty p.
-                        //otherwise take the rest of the p with.
-                        let finalRange = document.createRange();
-
-                        if(destinationNode.nextSibling == null){
-                            if(destinationNodeOffset == destinationNode.textContent.length){
-                                let p = document.createElement("P");
-                                let span = document.createElement("SPAN");
-                                let zwsp = document.createTextNode("\u200B");
-    
-                                finalRange.setStartAfter(destinationNode.parentNode.parentNode);
-                                finalRange.setEndAfter(destinationNode.parentNode.parentNode);
-                                finalRange.insertNode(p);
-                                p.appendChild(span);
-                                span.appendChild(zwsp);
-                                finalRange.selectNode(zwsp);
+                        for(let i = textNodes.length; i > 0; i-- ){
+                            //We have our starting node that doesn't need to be deleted comepletly.
+                            if(i-1 == 0 && startingNodeOffset != 0){
+                                let deleteRange = document.createRange();
+                                deleteRange.setStart(startingNode, startingNodeOffset);
+                                deleteRange.setEnd(startingNode, startingNode.length);
+                                deleteRange.extractContents();
+                                deleteRange.detach();
                             }
                             else{
-                                let p = document.createElement("P");
-                                let span = document.createElement("Span");
-                                if(destinationNode.parentNode.getAttributeNode("class") != null){
-                                    span.className = destinationNode.parentNode.getAttributeNode("class").value;
-                                }
-                                //we still need to take our siblings.
-
-                                let siblingsToTakeWith = [];
-                                            let nextSibling = destinationNode.parentNode.nextSibling;
-
-                                            while(nextSibling != null && nextSibling.nodeName == "SPAN"){
-                                                siblingsToTakeWith.push(nextSibling);
-                                                nextSibling = nextSibling.nextSibling;
-                                            }
-                                            console.log("We take siblings amount with: " + siblingsToTakeWith.length);
-                                finalRange.setStartAfter(destinationNode.parentNode.parentNode);
-                                finalRange.setEndAfter(destinationNode.parentNode.parentNode);
-                                finalRange.insertNode(p);
-                                p.appendChild(span);
-                                finalRange.setStart(destinationNode, destinationNodeOffset);
-                                finalRange.setEnd(destinationNode, destinationNode.textContent.length);
-                                let content = finalRange.extractContents();
-                                let text = document.createTextNode(content.textContent);
-                                span.appendChild(text);
-
-                                for(i=0; i < siblingsToTakeWith.length; i++){
-                                                p.appendChild(siblingsToTakeWith[i]);
-                                            
-                                            }
-                                finalRange.setStart(text, 0);
-                                finalRange.setEnd(text, 0);
-
-                            }
-                        }
-                       
-                        for(i=0; i < textNodes.length; i++){
-                        if(textNodes[i] == startingNode){
-                            //We handle the starting node.
-                            console.log("HANDLE STARTING NODE");
-                            console.log("STARTOFFSET: " + startingNodeOffset);
-                            console.log("DESTOFFSET: " + destinationNodeOffset);
-                            if(startingNodeOffset == 0){
-                                //We have the full node.
-                                //just delete
-                                if(startingNode.parentNode.previousSibling == null && startingNode.parentNode.nextSibling == null){
-                                    startingNode.parentNode.parentNode.parentNode.removeChild(startingNode.parentNode.parentNode);
-                                }
-                                else{
-                                    startingNode.parentNode.parentNode.removeChild(startingNode.parentNode);
-                                }
-                            }
-                            else{
-                                range.setStart(startingNode, startingNodeOffset);
-                                range.setEnd(startingNode, startingNode.textContent.length);
-                                range.extractContents();
-                            }
-                        }              
-                        else{
-                            //We handle the node in the middle.
-                            console.log("HANDLE MIDDLE NODE");
-                            if(textNodes[i].parentNode.previousSibling == null && textNodes[i].parentNode.nextSibling == null){
-                                textNodes[i].parentNode.parentNode.parentNode.removeChild(textNodes[i].parentNode.parentNode);
-                            }
-                            else{
-                                textNodes[i].parentNode.parentNode.removeChild(textNodes[i].parentNode);
-                            }
-
-                        }
-                        }
-                        selection.removeAllRanges();
-                        selection.addRange(finalRange);
-                        range.detach();
-                        finalRange.detach();
+                                Util.DeleteNode(textNodes[i-1]);
+                            }  
+                        }    
                     }
                 }
             }
             else{
-                //IT CAN HIT A SPAN, We need to check if the text node only contains a wszp.
-                //if thats the case we can still make a new P      
-                if(node.firstChild.nodeName == "#text"){
-                    console.log("We hebben onze text");
-                    //lastCharCode == 8203
-                    if(node.firstChild.textContent.charCodeAt(0) == 8203){
-                        console.log("Het is een whitespace.");
-                        if(node.firstChild.textContent.length == 1){
-                            console.log("Het is alleen een whitespace!");
-                            //switch the node to the correct text node.
-                            node = node.firstChild;
-
-                            if(node.parentNode.nodeName == "SPAN"){
-                                console.log("Our parent is a span.");
-                                console.log("erna?" + node.parentNode.nextSibling);
-                                if(node.parentNode.nextSibling == null){
-                                    //We create a p and a span tag in it, then put the cursor focus in the span.
-                                    //We create it after our current P
-                                    if(node.parentNode.parentNode.nodeName == "P"){
-                                        console.log("We hebben onze P tag.");
-                                        range.setStartAfter(node.parentNode.parentNode);
-                                        range.setEndAfter(node.parentNode.parentNode);
-                                        let p = document.createElement("P");
-                                        let span = document.createElement("SPAN");
-                                        let zwsp = document.createTextNode("\u200B");
-                                        range.insertNode(p);
-                                        p.appendChild(span);
-                                        span.appendChild(zwsp);
-                                        range.selectNode(zwsp);
-                                        selection.removeAllRanges();
-                                        selection.addRange(range);                            
-                                        range.detach();
-                                        console.log("Created the new P.");
-                                    }
-                                    else{
-                                        console.log("We hebben onze P tag niet gevonden!");
-                                    }
-                                }
-                            }                   
-                            else{
-                                console.log("Het is een whitespace, maar er zijn meerdere characters.");
-                            }                       
-                        }
-                    }
-                }            
-                console.log("Something went wrong, we try to push enter outside of a text node");
-                //If everything is deleted it can hit P without span, or div. without p.
-                //Need to fix those two edge cases.
-                console.log("NODENAME: " + node.nodeName);
+                console.warn("Huston we got a problem!");                        
             }
         }
     }

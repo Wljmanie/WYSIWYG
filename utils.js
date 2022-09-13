@@ -18,11 +18,7 @@ export class Util{
         return p;
     }
 
-    static InsertBeforeP(target){
-        this.visualView.insertBefore(this.CreateP(),target);
-    }
-
-    static InsertAfterP(target, node = null){
+    static InsertBeforeP(target, node = null){
         let p = this.CreateP();
         this.visualView.insertBefore(p,target);
 
@@ -33,7 +29,7 @@ export class Util{
         return p.firstChild.firstChild;
     }
 
-    static InsertAfterPWithContent(target, node, content, doMoveNodes = false){
+    static InsertBeforePWithContent(target, node, content, doMoveNodes = false){
         let p = this.CreateP(content);
         this.visualView.insertBefore(p, target);
         
@@ -58,6 +54,30 @@ export class Util{
         }
         for(let i=0; i < nodesToMove.length; i++){
             p.appendChild(nodesToMove[i]);
+        }
+    }
+
+    static DeleteNode(node){
+        if(node.parentNode.nextSibling == null && node.parentNode.previousSibling == null){
+            console.log("WE ARE LAST SPAN.");
+            if(node.parentNode.parentNode.previousSibling == null && node.parentNode.parentNode.nextSibling == null  ){
+                console.log("We are last P");
+                console.warn("We still have to implement this");
+            }
+            else{
+                
+                console.log("We are not the last P");
+                
+                node.parentNode.parentNode.parentNode.removeChild(node.parentNode.parentNode);
+                
+                
+            }
+
+        }
+        else{
+            console.log("We are not the last SPAN");
+                
+                node.parentNode.parentNode.removeChild(node.parentNode);
         }
     }
 
