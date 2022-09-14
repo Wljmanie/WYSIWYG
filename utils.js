@@ -82,7 +82,8 @@ export class Util{
         }
     }
 
-    static CheckForMerge(node1, node2){
+    static CheckForMergingSpans(node1, node2){
+        console.log("We check.");
         let weMerge = true;
         if(node1 != null && node2 != null){
             if(node1.classList.length == node2.classList.length){
@@ -102,7 +103,20 @@ export class Util{
         if(weMerge){
             node1.firstChild.textContent += node2.firstChild.textContent;
             this.DeleteNode(node2.firstChild);
-        }    
+        }  
+    }
+
+    static MergeP(node1, node2){
+        let nextSibling = node2.firstChild;
+        let nodesToMove = [];
+        while(nextSibling != null && nextSibling.nodeName == "SPAN"){
+            nodesToMove.push(nextSibling);
+            nextSibling = nextSibling.nextSibling;
+        }
+        for(let i=0; i < nodesToMove.length; i++){
+            node1.appendChild(nodesToMove[i]);
+        }
+        node2.parentNode.removeChild(node2);
     }
 
     static isBadSelection(selection){

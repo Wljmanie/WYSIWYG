@@ -335,7 +335,7 @@ function HandleBackspace(e){
                     if(node.parentNode.nextSibling != null && node.parentNode.previousSibling != null){
                         
                             let selectIndex = node.parentNode.previousSibling.firstChild.length;
-                            Util.CheckForMerge(node.parentNode.previousSibling, node.parentNode.nextSibling);
+                            Util.CheckForMergingSpans(node.parentNode.previousSibling, node.parentNode.nextSibling);
                             range.setStart(node.parentNode.previousSibling.firstChild, selectIndex);
                             range.setEnd(node.parentNode.previousSibling.firstChild, selectIndex);
                             Util.DeleteNode(node);
@@ -381,12 +381,19 @@ function HandleBackspace(e){
                     }
                     //We are at the beginning of the Paragraph so we merge with the previous one.
                     else{
-
-                        console.log("MERGE");
+                        let selectNode = node.parentNode.parentNode.previousSibling.lastChild.lastChild;
+                        let selectIndex = selectNode.length;
+                        Util.MergeP(node.parentNode.parentNode.previousSibling, node.parentNode.parentNode);
+                        Util.CheckForMergingSpans(node.parentNode.previousSibling, node.parentNode);
+                        range.setStart(selectNode, selectIndex);
+                        range.setEnd(selectNode, selectIndex);
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                        range.detach();
+                        return;               
                     }    
                 }
                 else{
-                    console.log("Delete the character.");
                     node.textContent = node.textContent.substring(0,nodeOffset-1) + node.textContent.substring(nodeOffset);          
                     range.setStart(node,nodeOffset-1);
                     range.setEnd(node, nodeOffset-1);
@@ -402,14 +409,6 @@ function HandleBackspace(e){
                     return;
                 }
             }
-            //If we are not at the beginning of the node, delete the character infront.
-                //if for some reason there is an empty whitespace in the middle, we delete two instead.
-                //if the last character is not a whitespace, just replace it with whitespace.
-                //if the character is a whitespace. Delete the span node.
-                    //if the span node was the first one, we need to combine the P tags.
-                    //if we move other nodes with us, we need to check if the two connecting nodes are the same.    
-                 //if we delete a node, we need to check if the two connecting nodes are the same
-             //If we are in the last one, last span, and we only have a whitespace, we do nothing.
          }
          else{
              //We select something bad.
