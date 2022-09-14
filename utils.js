@@ -77,8 +77,32 @@ export class Util{
         else{
             console.log("We are not the last SPAN");
                 
+
                 node.parentNode.parentNode.removeChild(node.parentNode);
         }
+    }
+
+    static CheckForMerge(node1, node2){
+        let weMerge = true;
+        if(node1 != null && node2 != null){
+            if(node1.classList.length == node2.classList.length){
+                node1.classList.forEach(function (c){
+                    if(!node2.classList.contains(c)){
+                        weMerge = false;
+                    }
+                });
+            }
+            else{
+                weMerge = false;
+            }
+        }
+        else{
+            weMerge = false;
+        }
+        if(weMerge){
+            node1.firstChild.textContent += node2.firstChild.textContent;
+            this.DeleteNode(node2.firstChild);
+        }    
     }
 
     static isBadSelection(selection){
