@@ -416,6 +416,220 @@ function HandleBackspace(e){
                 alert("Your selection is containing things outside the input box.");
                 return; 
             }
+
+            let textNodes = [];
+            let currentNode;
+            let startingNode;
+            let destinationNode;
+            let startingNodeOffset;
+            let destinationNodeOffset;
+                
+            //We check if the selection is from end to start.
+            if(Util.isSelectionBackwards(selection)){
+                currentNode = selection.focusNode;
+                startingNode = selection.focusNode;
+                destinationNode = selection.anchorNode;
+                startingNodeOffset = selection.focusOffset;
+                destinationNodeOffset = selection.anchorOffset;                }
+            else{
+                currentNode = selection.anchorNode;
+                startingNode = selection.anchorNode;
+                destinationNode = selection.focusNode;
+                startingNodeOffset = selection.anchorOffset;
+                destinationNodeOffset = selection.focusOffset;
+            }
+
+            //We grab all the nodes.
+            while(!currentNode.isSameNode(destinationNode)){
+                if(currentNode.nodeName == "#text"){
+                    textNodes.push(currentNode);
+                }
+        
+                if(currentNode.firstChild != null){
+                    currentNode = currentNode.firstChild;
+                }
+                else if (currentNode.nextSibling != null){
+                    
+                    currentNode = currentNode.nextSibling;
+                }
+                else if(currentNode.parentNode.nextSibling != null){
+                    currentNode = currentNode.parentNode.nextSibling;
+                }
+                else if(currentNode.parentNode.parentNode.nextSibling != null){
+                    currentNode = currentNode.parentNode.parentNode.nextSibling;
+                }
+                else{
+                    console.warn("We are going to loop since we don't change the current node. WE NEED TO FIX THIS.");
+                    return;
+                }
+            }
+            //We need to grab the last node.
+            textNodes.push(currentNode);
+            
+            //check if we have 1 node.
+            //if so full node, delete it. compair the other 2.
+            //if not, delete content.
+
+            //Check if we are at the beginning of the document.
+                //if we are, check if we selected everything.
+                    //delete all. -> create new p.
+                //if we are not.
+                    //delete the selected stuff.
+                    //put selection at the start of the dest node.
+            //If we are not, check if we are the beginning of a P
+                //if we are, we have a P before us by default.
+                    //we grab the length and the node of the previous p.
+                    //check if we have the last node selected to the end.
+                    //check if we have content to move.
+                    //if we do, compare spans to merge.
+                    //set the location range.
+                    //delete the stuff.
+            //if we are not, check if we are at the beginning of span.
+                //if we are, we delete this node.
+                    //we set the selection to the end of the span before us.
+                    //check if we have content to move from a different p.
+                    //if so, move it and compair spans.
+            //if we are somewhere in the middle. Delete the selected part.
+                //selection will be where we started deleting.
+ 
+                //check if we have stuff to move.
+                    //we compair spans.
+            return;
+            //We have a single node.
+            if(startingNode == destinationNode){
+                //We have the full node.
+                if(startingNodeOffset == 0 && destinationNodeOffset == destinationNode.length){
+                    //We have no siblings.
+                    if(startingNode.parentNode.previousSibling == null && startingNode.parentNode.nextSibling == null){
+                        //Check if we have a P before us or behind us.
+                        if(startingNode.parentNode.parentNode.previousSibling == null && startingNode.parentNode.parentNode.nextSibling == null){
+                            let p = Util.CreateP();
+                            startingNode.parentNode.parentNode.parentNode.appendChild(p);          
+                            range.setStart(p.firstChild.firstChild,1);
+                            range.setEnd(p.firstChild.firstChild, 1);
+                            selection.removeAllRanges();
+                            selection.addRange(range);
+                            range.detach();
+                            Util.DeleteNode(startingNode);
+                            return;
+                        }
+                        //Check if we have a p before us then.
+                        if(startingNode.parentNode.parentNode.previousSibling != null){
+                            let selectNode = startingNode.parentNode.parentNode.previousSibling.lastChild.lastChild;
+                            range.setStart(selectNode, selectNode.length);
+                            range.setEnd(selectNode, selectNode.length);
+                            selection.removeAllRanges();
+                            selection.addRange(range);
+                            range.detach();
+                            Util.destinationNode
+                        }
+                        
+                    }
+                    range.setStart(node.parentNode.parentNode.previousSibling.lastChild.lastChild, node.parentNode.parentNode.previousSibling.lastChild.lastChild.length);
+                    range.setEnd(node.parentNode.parentNode.previousSibling.lastChild.lastChild, node.parentNode.parentNode.previousSibling.lastChild.lastChild.length);
+                    Util.DeleteNode(node);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                    range.detach();
+                    return; 
+                }
+                else{
+                    range.extractContents();
+                    range.setStart(startingNode, startingNodeOffset);
+                    range.setEnd(startingNode, startingNodeOffset);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                    range.detach();
+                    return;
+                }
+            }
+
+            return;
+
+            //We are at the end of the paragraph.
+            if(destinationNode.length == destinationNodeOffset && destinationNode.parentNode.nextSibling == null){
+
+
+                let newNode = Util.InsertBeforeP(destinationNode.parentNode.parentNode.nextSibling);                  
+                range.selectNode(newNode);                           
+                selection.removeAllRanges();
+                selection.addRange(range);                            
+                range.detach();                                 
+            }
+            //We have content to move to the new Paragraph.
+            else {
+                if(destinationNode.parentNode.nextSibling == null){
+                    range.setStart(destinationNode, destinationNodeOffset);
+                    range.setEnd(destinationNode, destinationNode.length);
+                    let cursorNode = Util.InsertBeforePWithContent(destinationNode.parentNode.parentNode.nextSibling, destinationNode, range.extractContents());                             
+                    cursorNode = Util.InsertBeforeP(currentNode.parentNode.parentNode.nextSibling);
+                    range.setStart(cursorNode, 0);
+                    range.setEnd(cursorNode, 0);
+                    selection.removeAllRanges();
+                    selection.addRange(range);                            
+                    range.detach();     
+                }
+                else{
+                    range.setStart(destinationNode, destinationNodeOffset);
+                    range.setEnd(destinationNode, destinationNode.length);
+                    let cursorNode = Util.InsertBeforePWithContent(destinationNode.parentNode.parentNode.nextSibling, destinationNode, range.extractContents(), true);                             
+                    cursorNode = Util.InsertBeforeP(currentNode.parentNode.parentNode.nextSibling);
+                    range.setStart(cursorNode, 0);
+                    range.setEnd(cursorNode, 0);
+                    selection.removeAllRanges();
+                    selection.addRange(range);                            
+                    range.detach(); 
+                }    
+            }
+            if(textNodes.length == 1){
+                if(startingNodeOffset == 0 && destinationNodeOffset == destinationNode.length){
+                    Util.DeleteNode(startingNode);
+                }
+                else{
+                    let deleteRange = document.createRange();
+                    deleteRange.setStart(startingNode, startingNodeOffset);
+                    deleteRange.setEnd(destinationNode, destinationNodeOffset);
+                    deleteRange.extractContents();
+                    deleteRange.detach();
+                }
+            }
+            else{
+                for(let i = textNodes.length; i > 0; i-- ){
+                    //We have our starting node that doesn't need to be deleted comepletly.
+                    if(i-1 == 0 && startingNodeOffset != 0){
+                        let deleteRange = document.createRange();
+                        deleteRange.setStart(startingNode, startingNodeOffset);
+                        deleteRange.setEnd(startingNode, startingNode.length);
+                        deleteRange.extractContents();
+                        deleteRange.detach();
+                    }
+                    else{
+                        Util.DeleteNode(textNodes[i-1]);
+                    }  
+                }    
+            }
+
+            //check if we have 1 node.
+            //check if we have the full node.
+            //check merging.
+
+            //if we have multiple nodes
+                //check if we have multiple P.
+                    //if we do, check if we have to move stuff from the back.
+                    //if not, check if we fully delete the first one.
+                    //if so move the the cursor on the end of that one.
+                    //if there is none before put the cursor in front of the one after.
+                    //if neither is the case we create an empty p.
+                //if we have a single p.
+                    //check if we have the full p.
+                    //if so, delete it. move the cursor in front.
+                        //move cursor to the end of the previous one.
+                    //if not, delete the partial stuff. move the cursor to the back.
+                    
+
+
+
+
             //We just delete the selection.
             //We need to check if we need to merge 2Ps
             //We need to check if the new spans are the same.

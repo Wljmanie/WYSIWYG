@@ -62,7 +62,11 @@ export class Util{
             console.log("WE ARE LAST SPAN.");
             if(node.parentNode.parentNode.previousSibling == null && node.parentNode.parentNode.nextSibling == null  ){
                 console.log("We are last P");
-                console.warn("We still have to implement this");
+                console.warn("We still have to implement this//Should never been the case.");
+                let p = this.CreateP();
+                node.parentNode.parentNode.parentNode.appendChild(p);
+                node.parentNode.parentNode.parentNode.removeChild(node.parentNode.parentNode);
+                //Maybe we need to fix out selection to test.
             }
             else{
                 
